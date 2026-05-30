@@ -11,7 +11,7 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 
 class IRankRepository(ABC):

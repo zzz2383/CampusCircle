@@ -32,28 +32,45 @@ from app.infrastructure.logger import get_logger
 logger = get_logger(__name__)
 
 _redis_client: Optional[Redis] = None
+_redis_unavailable: bool = False
 
 
 async def get_redis() -> Redis:
     """获取全局 Redis 客户端单例
 
     实现逻辑：
-        1. 如果 _redis_client 尚未创建，则创建新连接
-        2. 如果连接已存在且可用，直接返回
-        3. 使用 decode_responses=True 确保返回字符串而非字节
+        1. 如果 Redis 之前已确认不可用，直接抛出 ConnectionError
+        2. 如果 _redis_client 尚未创建，则创建新连接并 ping 验证
+        3. 如果连接已存在且可用，直接返回
+        4. 使用 decode_responses=True 确保返回字符串而非字节
 
     返回值：
         Redis 异步客户端实例
+
+    异常：
+        ConnectionError: Redis 服务不可用
     """
-    global _redis_client
+    global _redis_client, _redis_unavailable
+
+    if _redis_unavailable:
+        raise ConnectionError(
+            f"Redis 服务不可用 ({settings.REDIS_HOST}:{settings.REDIS_PORT})"
+        )
 
     if _redis_client is None:
-        _redis_client = Redis.from_url(
-            settings.redis_url,
-            decode_responses=True,
-        )
-        await _redis_client.ping()
-        logger.info(f"Redis connected at {settings.REDIS_HOST}:{settings.REDIS_PORT}")
+        try:
+            _redis_client = Redis.from_url(
+                settings.redis_url,
+                decode_responses=True,
+            )
+            await _redis_client.ping()
+            logger.info(f"Redis connected at {settings.REDIS_HOST}:{settings.REDIS_PORT}")
+        except Exception as e:
+            _redis_client = None
+            _redis_unavailable = True
+            raise ConnectionError(
+                f"Redis 服务不可用 ({settings.REDIS_HOST}:{settings.REDIS_PORT}): {e}"
+            )
 
     return _redis_client
 
@@ -64,10 +81,12 @@ async def close_redis():
     实现逻辑：
         1. 关闭 Redis 连接池
         2. 将全局变量置为 None
+        3. 重置不可用标志
     """
-    global _redis_client
+    global _redis_client, _redis_unavailable
 
     if _redis_client is not None:
         await _redis_client.aclose()
         _redis_client = None
-        logger.info("Redis connection closed")
+    _redis_unavailable = False
+    logger.info("Redis connection closed")
