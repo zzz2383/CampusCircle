@@ -1,0 +1,9 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CampusCircle - 校园实时论坛系统 API",
+    "version": "0.1.0",
+    "description": "由 FastAPI 自动生成，启动后访问 /docs 查看最新版本"
+  },
+  "note": "此文件由 FastAPI 自动生成。每次提交前请确认与最新代码一致。启动后端后访问 http://localhost:8000/openapi.json 获取最新内容。"
+}
