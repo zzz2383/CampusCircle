@@ -16,9 +16,12 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.business.interfaces.user_service import IUserService
+from app.business.interfaces.post_service import IPostService
 from app.business.impl.user_service_impl import UserServiceImpl
+from app.business.impl.post_service_impl import PostServiceImpl
 from app.business.impl.auth_utils import decode_access_token
 from app.data_access.sqlite_dao.user_dao_impl import UserDAOImpl
+from app.data_access.sqlite_dao.post_dao_impl import PostDAOImpl
 from app.infrastructure.db import get_db
 from app.models.dto import UserDTO
 
@@ -92,3 +95,21 @@ async def get_current_user(
         )
 
     return user
+
+
+async def get_post_service(db: AsyncSession = Depends(get_db)) -> IPostService:
+    """依赖注入：获取 PostService 实例
+
+    实现逻辑：
+        1. 通过 get_db 获取数据库会话
+        2. 创建 PostDAOImpl（注入 db session）
+        3. 创建 PostServiceImpl（注入 post_dao + db session）
+
+    参数：
+        db: 由 FastAPI 自动注入的 AsyncSession
+
+    返回值：
+        IPostService 实例
+    """
+    post_dao = PostDAOImpl(db)
+    return PostServiceImpl(post_dao=post_dao, db_session=db)
