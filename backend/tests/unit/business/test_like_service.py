@@ -75,11 +75,10 @@ async def test_like_post_success(service, mock_like_repo, mock_rank_repo, mock_p
     assert result.is_liked is True
     assert result.like_count == 3
     mock_like_repo.add_like.assert_awaited_once_with(1, 5)
-    # 验证热榜加分
-    mock_rank_repo.increment_score.assert_awaited_once()
-    args = mock_rank_repo.increment_score.await_args
-    assert args[0][0] == "hot:posts:day:课程"  # key
-    assert args[0][2] == 2  # increment
+    # 验证热榜加分（全站榜 + 标签榜各一次）
+    assert mock_rank_repo.increment_score.await_count == 2
+    mock_rank_repo.increment_score.assert_any_call("hot:posts:day:all", "1", 2)
+    mock_rank_repo.increment_score.assert_any_call("hot:posts:day:课程", "1", 2)
 
 
 @pytest.mark.asyncio
@@ -98,8 +97,8 @@ async def test_like_post_twice_idempotent(service, mock_like_repo, mock_rank_rep
     r2 = await service.like_post(user_id=5, post_id=1)
     assert r2.like_count == 1  # 仍然只有 1 人点赞
 
-    # 热榜加分只应在首次点赞时触发（add_like 返回 1 表示新增）
-    assert mock_rank_repo.increment_score.await_count == 2
+    # 每次点赞都会触发热榜加分（全站 + 标签各一次）
+    assert mock_rank_repo.increment_score.await_count == 4
 
 
 @pytest.mark.asyncio

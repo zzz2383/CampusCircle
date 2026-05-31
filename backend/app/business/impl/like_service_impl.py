@@ -88,7 +88,12 @@ class LikeServiceImpl(ILikeService):
         count = await self.like_repo.add_like(post_id, user_id)
         logger.info(f"Post {post_id} liked by user {user_id}, total: {count}")
 
-        # 3. 更新热帖榜（遍历帖子标签）
+        # 3. 更新热帖榜（同时更新全站榜和标签榜）
+        # 全站榜
+        await self.rank_repo.increment_score(
+            "hot:posts:day:all", str(post_id), LIKE_HOT_SCORE
+        )
+        # 按标签细分榜
         if post.tags:
             for tag in post.tags.split(","):
                 tag = tag.strip()
