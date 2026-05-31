@@ -62,6 +62,7 @@ async def get_redis() -> Redis:
             _redis_client = Redis.from_url(
                 settings.redis_url,
                 decode_responses=True,
+                protocol=2,  # 使用 RESP2 协议，兼容 Memurai 等 Redis 替代品
             )
             await _redis_client.ping()
             logger.info(f"Redis connected at {settings.REDIS_HOST}:{settings.REDIS_PORT}")
