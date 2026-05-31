@@ -24,7 +24,7 @@ from app.infrastructure.exceptions import AppException
 from app.infrastructure.logger import get_logger
 from app.infrastructure.db import init_db, close_db
 from app.infrastructure.redis_client import get_redis, close_redis
-from app.presentation.api import auth, posts, likes, rank, notifications
+from app.presentation.api import auth, posts, likes, rank, notifications, comments
 
 logger = get_logger(__name__)
 
@@ -83,6 +83,7 @@ def create_app() -> FastAPI:
     app.include_router(likes.router)
     app.include_router(rank.router)
     app.include_router(notifications.router)
+    app.include_router(comments.router)
 
     # 全局异常处理器
     @app.exception_handler(AppException)

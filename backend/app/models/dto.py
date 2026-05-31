@@ -94,6 +94,33 @@ class PostListResponse(BaseModel):
     limit: int
 
 
+# ========== 评论相关 ==========
+
+class CommentCreateRequest(BaseModel):
+    """创建评论请求"""
+    content: str = Field(..., min_length=1, max_length=2000, description="评论内容")
+    parent_id: Optional[int] = Field(None, description="父评论 ID（楼中楼）")
+
+
+class CommentDTO(BaseModel):
+    """评论信息 DTO"""
+    id: int
+    post_id: int
+    user_id: int
+    author_nickname: Optional[str] = None
+    content: str
+    parent_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+class CommentListResponse(BaseModel):
+    """评论列表响应"""
+    items: List[CommentDTO]
+    total: int
+
+
 # ========== 点赞相关 ==========
 
 class LikeResultDTO(BaseModel):

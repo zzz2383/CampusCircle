@@ -22,14 +22,17 @@ from app.business.interfaces.user_service import IUserService
 from app.business.interfaces.post_service import IPostService
 from app.business.interfaces.like_service import ILikeService
 from app.business.interfaces.rank_service import IRankService
+from app.business.interfaces.comment_service import ICommentService
 from app.business.impl.user_service_impl import UserServiceImpl
 from app.business.impl.post_service_impl import PostServiceImpl
 from app.business.impl.like_service_impl import LikeServiceImpl
 from app.business.impl.rank_service_impl import RankServiceImpl
+from app.business.impl.comment_service_impl import CommentServiceImpl
 from app.business.impl.auth_utils import decode_access_token
 from app.data_access.sqlite_dao.user_dao_impl import UserDAOImpl
 from app.data_access.sqlite_dao.post_dao_impl import PostDAOImpl
 from app.data_access.sqlite_dao.club_dao_impl import ClubDAOImpl
+from app.data_access.sqlite_dao.comment_dao_impl import CommentDAOImpl
 from app.data_access.redis_repo.like_repo_impl import LikeRepositoryImpl
 from app.data_access.redis_repo.rank_repo_impl import RankRepositoryImpl
 from app.infrastructure.db import get_db
@@ -145,4 +148,17 @@ async def get_rank_service(
         like_repo=like_repo,
         post_dao=post_dao,
         club_dao=club_dao,
+    )
+
+
+async def get_comment_service(
+    db: AsyncSession = Depends(get_db),
+) -> ICommentService:
+    """依赖注入：获取 CommentService 实例"""
+    comment_dao = CommentDAOImpl(db)
+    post_dao = PostDAOImpl(db)
+    return CommentServiceImpl(
+        comment_dao=comment_dao,
+        post_dao=post_dao,
+        db_session=db,
     )

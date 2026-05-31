@@ -103,6 +103,9 @@ class Comment(Base):
         DateTime(timezone=True), server_default=func.now(), comment="创建时间"
     )
 
+    # 关系
+    author = relationship("User", lazy="selectin")
+
 
 class Club(Base):
     """社团模型"""
