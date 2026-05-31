@@ -25,6 +25,7 @@ from app.infrastructure.logger import get_logger
 from app.infrastructure.db import init_db, close_db
 from app.infrastructure.redis_client import get_redis, close_redis
 from app.presentation.api import auth, posts, likes, rank, notifications, comments
+from app.presentation.websocket.handler import websocket_handler
 
 logger = get_logger(__name__)
 
@@ -84,6 +85,12 @@ def create_app() -> FastAPI:
     app.include_router(rank.router)
     app.include_router(notifications.router)
     app.include_router(comments.router)
+
+    # WebSocket
+    from fastapi import Query
+    @app.websocket("/ws")
+    async def ws_endpoint(websocket, token: str = Query(...)):
+        await websocket_handler(websocket, token=token)
 
     # 全局异常处理器
     @app.exception_handler(AppException)

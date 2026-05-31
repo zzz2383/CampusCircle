@@ -27,6 +27,7 @@
 from typing import Optional
 
 from app.business.interfaces.like_service import ILikeService
+from app.business.interfaces.notification_service import INotificationService
 from app.data_access.redis_repo.like_repo import ILikeRepository
 from app.data_access.redis_repo.rank_repo import IRankRepository
 from app.data_access.sqlite_dao.post_dao import IPostDAO
@@ -48,10 +49,12 @@ class LikeServiceImpl(ILikeService):
         like_repo: ILikeRepository,
         rank_repo: IRankRepository,
         post_dao: IPostDAO,
+        notification_service: INotificationService = None,
     ):
         self.like_repo = like_repo
         self.rank_repo = rank_repo
         self.post_dao = post_dao
+        self.notification_service = notification_service
 
     async def like_post(self, user_id: int, post_id: int) -> LikeResultDTO:
         """
@@ -102,6 +105,18 @@ class LikeServiceImpl(ILikeService):
                     await self.rank_repo.increment_score(
                         rank_key, str(post_id), LIKE_HOT_SCORE
                     )
+
+        # 4. 发送通知给帖子作者（点赞者不是作者本人时）
+        if self.notification_service and post.user_id != user_id:
+            await self.notification_service.send_notification(
+                user_id=post.user_id,
+                data={
+                    "type": "like",
+                    "content": "有人赞了你的帖子",
+                    "sender_id": user_id,
+                    "post_id": post_id,
+                },
+            )
 
         return LikeResultDTO(is_liked=True, like_count=count)
 

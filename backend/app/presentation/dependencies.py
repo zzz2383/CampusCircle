@@ -23,11 +23,13 @@ from app.business.interfaces.post_service import IPostService
 from app.business.interfaces.like_service import ILikeService
 from app.business.interfaces.rank_service import IRankService
 from app.business.interfaces.comment_service import ICommentService
+from app.business.interfaces.notification_service import INotificationService
 from app.business.impl.user_service_impl import UserServiceImpl
 from app.business.impl.post_service_impl import PostServiceImpl
 from app.business.impl.like_service_impl import LikeServiceImpl
 from app.business.impl.rank_service_impl import RankServiceImpl
 from app.business.impl.comment_service_impl import CommentServiceImpl
+from app.business.impl.notification_service_impl import NotificationServiceImpl
 from app.business.impl.auth_utils import decode_access_token
 from app.data_access.sqlite_dao.user_dao_impl import UserDAOImpl
 from app.data_access.sqlite_dao.post_dao_impl import PostDAOImpl
@@ -35,6 +37,7 @@ from app.data_access.sqlite_dao.club_dao_impl import ClubDAOImpl
 from app.data_access.sqlite_dao.comment_dao_impl import CommentDAOImpl
 from app.data_access.redis_repo.like_repo_impl import LikeRepositoryImpl
 from app.data_access.redis_repo.rank_repo_impl import RankRepositoryImpl
+from app.data_access.redis_repo.notification_repo_impl import NotificationRepositoryImpl
 from app.infrastructure.db import get_db
 from app.infrastructure.redis_client import get_redis
 from app.models.dto import UserDTO
@@ -106,18 +109,19 @@ async def get_redis_client():
         )
 
 
+async def get_notification_service(
+    redis=Depends(get_redis_client),
+) -> INotificationService:
+    """依赖注入：获取 NotificationService 实例"""
+    notification_repo = NotificationRepositoryImpl(redis)
+    return NotificationServiceImpl(notification_repo=notification_repo)
+
+
 async def get_like_service(
     redis=Depends(get_redis_client),
     db: AsyncSession = Depends(get_db),
 ) -> ILikeService:
-    """依赖注入：获取 LikeService 实例
-
-    实现逻辑：
-        1. 创建 LikeRepositoryImpl（注入 Redis）
-        2. 创建 RankRepositoryImpl（注入 Redis）
-        3. 创建 PostDAOImpl（注入 SQLite session，用于校验帖子存在）
-        4. 创建 LikeServiceImpl（注入 like_repo + rank_repo + post_dao）
-    """
+    """依赖注入：获取 LikeService 实例"""
     like_repo = LikeRepositoryImpl(redis)
     rank_repo = RankRepositoryImpl(redis)
     post_dao = PostDAOImpl(db)
@@ -125,6 +129,7 @@ async def get_like_service(
         like_repo=like_repo,
         rank_repo=rank_repo,
         post_dao=post_dao,
+        notification_service=await get_notification_service(redis=redis),
     )
 
 
@@ -152,6 +157,7 @@ async def get_rank_service(
 
 
 async def get_comment_service(
+    redis=Depends(get_redis_client),
     db: AsyncSession = Depends(get_db),
 ) -> ICommentService:
     """依赖注入：获取 CommentService 实例"""
@@ -161,4 +167,5 @@ async def get_comment_service(
         comment_dao=comment_dao,
         post_dao=post_dao,
         db_session=db,
+        notification_service=await get_notification_service(redis=redis),
     )

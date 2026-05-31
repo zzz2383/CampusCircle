@@ -15,7 +15,7 @@ from typing import Any, Dict
 
 
 class INotificationRepository(ABC):
-    """通知数据访问接口（Redis Pub/Sub）"""
+    """通知数据访问接口（Redis Pub/Sub + List）"""
 
     @abstractmethod
     async def publish(self, channel: str, message: Dict[str, Any]) -> int:
@@ -27,9 +27,6 @@ class INotificationRepository(ABC):
 
         返回值：
             接收该消息的订阅者数量
-
-        测试用例：
-            - test_publish_notification
         """
         ...
 
@@ -55,5 +52,17 @@ class INotificationRepository(ABC):
 
         返回值：
             当前未读通知数
+        """
+        ...
+
+    @abstractmethod
+    async def get_unread_count(self, user_id: int) -> int:
+        """获取未读通知数（LLEN）
+
+        参数：
+            user_id: 用户 ID
+
+        返回值：
+            未读通知数量
         """
         ...

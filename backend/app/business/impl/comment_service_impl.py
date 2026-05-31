@@ -3,7 +3,7 @@
 
 调用链路：
     - 被表现层 comments 路由调用
-    - 调用 ICommentDAO + IPostDAO
+    - 调用 ICommentDAO + IPostDAO + INotificationService
 """
 
 from typing import Optional
@@ -11,6 +11,7 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.business.interfaces.comment_service import ICommentService
+from app.business.interfaces.notification_service import INotificationService
 from app.data_access.sqlite_dao.comment_dao import ICommentDAO
 from app.data_access.sqlite_dao.post_dao import IPostDAO
 from app.infrastructure.exceptions import PostNotFoundError, BusinessError
@@ -29,10 +30,12 @@ class CommentServiceImpl(ICommentService):
         comment_dao: ICommentDAO,
         post_dao: IPostDAO,
         db_session: AsyncSession,
+        notification_service: INotificationService = None,
     ):
         self.comment_dao = comment_dao
         self.post_dao = post_dao
         self.db_session = db_session
+        self.notification_service = notification_service
 
     async def create_comment(
         self, post_id: int, user_id: int, request: CommentCreateRequest
@@ -44,7 +47,8 @@ class CommentServiceImpl(ICommentService):
             2. 创建 Comment ORM 对象
             3. 写入数据库
             4. 提交事务
-            5. 重新查询返回完整 DTO（含作者昵称）
+            5. 通知帖子作者（非自己评论时）
+            6. 重新查询返回完整 DTO（含作者昵称）
         """
         post = await self.post_dao.get_by_id(post_id)
         if post is None:
@@ -61,6 +65,18 @@ class CommentServiceImpl(ICommentService):
 
         logger.info(f"Comment created: id={cid}, post_id={post_id}, user_id={user_id}")
 
+        # 发送通知给帖子作者（评论者不是作者本人时）
+        if self.notification_service and post.user_id != user_id:
+            await self.notification_service.send_notification(
+                user_id=post.user_id,
+                data={
+                    "type": "comment",
+                    "content": "有人评论了你的帖子",
+                    "sender_id": user_id,
+                    "post_id": post_id,
+                },
+            )
+
         created = await self.comment_dao.get_by_id(cid)
         return self._to_dto(created)
 
@@ -73,13 +89,7 @@ class CommentServiceImpl(ICommentService):
         return CommentListResponse(items=items, total=len(items))
 
     async def delete_comment(self, comment_id: int, user_id: int) -> bool:
-        """删除评论（仅作者）
-
-        实现逻辑：
-            1. 查询评论是否存在
-            2. 校验是否为评论作者
-            3. 执行软删除
-        """
+        """删除评论（仅作者）"""
         comment = await self.comment_dao.get_by_id(comment_id)
         if comment is None:
             raise BusinessError(code="COMMENT_NOT_FOUND", message="评论不存在")
