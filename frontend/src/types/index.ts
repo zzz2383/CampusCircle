@@ -79,3 +79,14 @@ export interface ClubRankDTO {
     club_name: string
     post_count: number
 }
+
+export interface CreatePostPayload {
+    title: string
+    content: string
+    tags?: string   // 逗号分隔的标签字符串
+}
+
+export interface LikeResponse {
+    is_liked: boolean
+    like_count: number
+}
