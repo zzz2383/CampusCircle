@@ -1,9 +1,7 @@
-<script setup lang="ts">
-import AppLayout from './components/Layout/AppLayout.vue'
-</script>
-
 <template>
-  <AppLayout>
-    <router-view />
-  </AppLayout>
+  <router-view />
 </template>
+
+<script setup lang="ts">
+// 根组件仅负责路由出口，不含业务逻辑
+</script>

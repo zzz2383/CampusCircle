@@ -1,10 +1,16 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'   // 关键修改
 import vue from '@vitejs/plugin-vue'
+import path from 'path'
 
 export default defineConfig({
   plugins: [vue()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   server: {
-    port: 5173,
+    port: 3000,
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
@@ -15,5 +21,10 @@ export default defineConfig({
         ws: true,
       },
     },
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './tests/setup.ts',
   },
 })
