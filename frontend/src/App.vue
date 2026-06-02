@@ -3,5 +3,12 @@
 </template>
 
 <script setup lang="ts">
-// 根组件仅负责路由出口，不含业务逻辑
+import { useUserStore } from './stores/userStore'
+import { onMounted } from 'vue'
+
+const userStore = useUserStore()
+
+onMounted(() => {
+  userStore.initAuth()
+})
 </script>

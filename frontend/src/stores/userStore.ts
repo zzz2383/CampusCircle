@@ -1,4 +1,3 @@
-// src/stores/userStore.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { User } from '@/types'
@@ -8,20 +7,13 @@ export const useUserStore = defineStore('user', () => {
     const user = ref<User | null>(null)
     const isLoggedIn = ref(false)
 
-    /**
-     * 登录 — 调用真实后端
-     * 成功后自动设置 user 和 isLoggedIn 状态
-     */
     const login = async (student_id: string, password: string) => {
-        const tokenDTO = await apiLogin({ student_id, password })
-        user.value = tokenDTO.user
+        const loginRes = await apiLogin({ student_id, password })
+        user.value = loginRes.user
         isLoggedIn.value = true
-        return tokenDTO
+        return loginRes
     }
 
-    /**
-     * 初始化：尝试从 token 恢复用户信息（用于页面刷新）
-     */
     const initAuth = async () => {
         const token = localStorage.getItem('access_token')
         if (token && !user.value) {
