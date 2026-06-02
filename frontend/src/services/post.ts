@@ -43,3 +43,11 @@ export const likePost = (postId: number) => {
 export const unlikePost = (postId: number) => {
     return request.delete<never, LikeResponse>(`/posts/${postId}/like`)
 }
+
+/**
+ * 获取当前用户的帖子列表
+ * GET /api/users/me/posts?offset=0&limit=20
+ */
+export const getMyPosts = (params?: { offset?: number; limit?: number }) => {
+    return request.get<never, PostListResponse>('/users/me/posts', { params })
+}

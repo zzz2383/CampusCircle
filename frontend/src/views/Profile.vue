@@ -71,8 +71,6 @@
                                     <div class="user-nickname">{{ item.nickname }}</div>
                                     <div class="user-meta">{{ item.student_id }}</div>
                                 </div>
-                                <el-button size="small" type="danger" plain
-                                    @click.stop="unfollowUser(item.id)">取消关注</el-button>
                             </div>
                         </div>
                     </el-tab-pane>
@@ -87,8 +85,6 @@
                                     <div class="user-nickname">{{ item.nickname }}</div>
                                     <div class="user-meta">{{ item.student_id }}</div>
                                 </div>
-                                <el-button size="small" type="primary" plain
-                                    @click.stop="followUser(item.id)">关注</el-button>
                             </div>
                         </div>
                     </el-tab-pane>
@@ -151,6 +147,7 @@ import { ArrowLeft } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/userStore'
 import { updateProfile } from '@/services/auth'
 import type { User, Gender } from '@/types'
+import { getMyPosts } from '@/services/post'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -195,63 +192,26 @@ const fetchStats = async () => {
 const fetchMyPosts = async () => {
     postsLoading.value = true
     try {
-        // TODO: 对接 GET /api/users/me/posts
-        // 模拟数据
-        myPosts.value = [
-            { id: 101, title: '计算机学院讲座: AI 前沿与应用', like_count: 24, created_at: new Date(Date.now() - 86400000).toISOString() },
-            { id: 102, title: '食堂麻辣香锅推荐', like_count: 32, created_at: new Date(Date.now() - 172800000).toISOString() }
-        ]
+        const res = await getMyPosts({ offset: 0, limit: 20 })
+        myPosts.value = res.items
+        postsCount.value = res.total
+    } catch (error) {
+        ElMessage.error('加载我的帖子失败')
     } finally {
         postsLoading.value = false
     }
 }
 
-// 获取关注列表
-const fetchFollowing = async () => {
-    followingLoading.value = true
-    try {
-        // TODO: 对接 GET /api/users/me/following
-        followingList.value = [
-            { id: 2, nickname: '李华', student_id: '20240002' },
-            { id: 3, nickname: '王老师', student_id: '20230001' }
-        ]
-    } finally {
-        followingLoading.value = false
-    }
-}
-
-// 获取粉丝列表
-const fetchFollowers = async () => {
-    followersLoading.value = true
-    try {
-        // TODO: 对接 GET /api/users/me/followers
-        followersList.value = [
-            { id: 4, nickname: '张小花', student_id: '20240005' },
-            { id: 5, nickname: '赵学长', student_id: '20230010' }
-        ]
-    } finally {
-        followersLoading.value = false
-    }
-}
 
 // 监听 Tab 切换，懒加载数据
 const onTabChange = (tabName: string) => {
-    if (tabName === 'posts' && myPosts.value.length === 0) fetchMyPosts()
-    if (tabName === 'following' && followingList.value.length === 0) fetchFollowing()
-    if (tabName === 'followers' && followersList.value.length === 0) fetchFollowers()
-}
-
-// 关注/取消关注（模拟）
-const followUser = async (userId: number) => {
-    // TODO: 对接 POST /api/users/{id}/follow
-    ElMessage.success('已关注')
-    await fetchFollowing()
-}
-const unfollowUser = async (userId: number) => {
-    // TODO: 对接 DELETE /api/users/{id}/follow
-    followingList.value = followingList.value.filter(u => u.id !== userId)
-    followingCount.value--
-    ElMessage.success('已取消关注')
+    if (tabName === 'posts' && myPosts.value.length === 0) {
+        fetchMyPosts()
+    }
+    // 关注/粉丝接口暂未实现，给出友好提示
+    if (tabName === 'following' || tabName === 'followers') {
+        ElMessage.info('关注/粉丝功能即将开放')
+    }
 }
 
 // 编辑资料
@@ -324,9 +284,8 @@ onMounted(async () => {
         await userStore.initAuth()
     }
     if (userStore.user) {
-        await fetchStats()
-        // 默认加载我的帖子
-        await fetchMyPosts()
+        await fetchStats()  // 模拟统计数据，如有接口再替换
+        await fetchMyPosts() // 加载真实帖子
     }
 })
 </script>
