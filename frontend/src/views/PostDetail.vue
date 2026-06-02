@@ -313,8 +313,13 @@ const submitReply = async (parentId: number) => {
 }
 
 const formatTime = (iso: string) => {
+    if (!iso) return '未知时间'
     const date = new Date(iso)
-    const diff = Date.now() - date.getTime()
+    if (isNaN(date.getTime())) return '无效时间'
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    // 处理未来时间（时钟不同步或数据异常）
+    if (diff < 0) return '刚刚'
     if (diff < 60000) return '刚刚'
     if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`

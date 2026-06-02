@@ -1,6 +1,6 @@
 // src/services/request.ts
 import axios from 'axios'
-import type { AxiosInstance, AxiosResponse } from 'axios'
+import type { AxiosInstance } from 'axios'
 import { ElMessage } from 'element-plus'
 
 const request: AxiosInstance = axios.create({
@@ -19,17 +19,23 @@ request.interceptors.request.use((config) => {
 
 // 响应拦截器：统一错误处理
 request.interceptors.response.use(
-    (response: AxiosResponse) => response.data,  // 直接返回 data
-    (error) => {
+    (response) => response.data,
+    async (error) => {
+        const originalRequest = error.config
+        // 401 未认证：清除本地 token 并提示跳转
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true
+            ElMessage.error('登录已过期，请重新登录')
+            localStorage.removeItem('access_token')
+            // 延迟跳转，让用户看到提示
+            setTimeout(() => {
+                window.location.href = '/auth'
+            }, 1500)
+            return Promise.reject(error)
+        }
         const message = error.response?.data?.detail || error.message || '网络错误'
         ElMessage.error(message)
-        // 如果是 401 未认证，清除本地 token 并跳转登录
-        if (error.response?.status === 401) {
-            localStorage.removeItem('access_token')
-            window.location.href = '/auth'
-        }
         return Promise.reject(error)
     }
 )
-
 export default request
