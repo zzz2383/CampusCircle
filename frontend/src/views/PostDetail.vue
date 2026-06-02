@@ -335,6 +335,8 @@ const goBack = () => {
 onMounted(async () => {
     await fetchPost()
     if (post.value) {
+        // 增加浏览量（不阻塞页面渲染）
+        fetch(`/api/posts/${post.value.id}/view`, { method: 'POST' }).catch(() => {})
         await fetchComments()
     }
 })
