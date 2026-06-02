@@ -195,3 +195,31 @@ class NotificationDTO(BaseModel):
     post_id: Optional[int] = None
     is_read: bool = False
     created_at: Optional[datetime] = None
+
+
+# ========== 失物招领相关 ==========
+
+class LostItemCreateRequest(BaseModel):
+    """发布失物/拾物请求"""
+    title: str = Field(..., min_length=1, max_length=200, description="标题")
+    description: str = Field(..., min_length=1, description="物品描述")
+    location: Optional[str] = Field(None, max_length=200, description="丢失/拾到地点")
+    contact: Optional[str] = Field(None, max_length=100, description="联系方式")
+    is_lost: bool = Field(True, description="True=丢失, False=拾到")
+
+
+class LostItemDTO(BaseModel):
+    """失物招领 DTO"""
+    id: int
+    user_id: int
+    title: str
+    description: str
+    location: Optional[str] = None
+    contact: Optional[str] = None
+    is_found: bool = False
+    is_lost: bool = True
+    expires_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    author_nickname: Optional[str] = None
+
+    model_config = {"from_attributes": True}

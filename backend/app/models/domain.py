@@ -148,8 +148,8 @@ class LostItem(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False, comment="物品描述")
     location: Mapped[Optional[str]] = mapped_column(String(200), nullable=True, comment="丢失/拾到地点")
     contact: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, comment="联系方式")
-    is_found: Mapped[bool] = mapped_column(Boolean, default=False, comment="是否已找回")
-    is_lost: Mapped[bool] = mapped_column(Boolean, default=True, comment="True=丢失, False=拾到")
+    is_found: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, comment="是否已找回")
+    is_lost: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, comment="True=丢失, False=拾到")
     expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True, comment="自动过期时间（7天后）"
     )
