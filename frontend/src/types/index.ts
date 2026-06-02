@@ -90,3 +90,10 @@ export interface LikeResponse {
     is_liked: boolean
     like_count: number
 }
+
+export interface ClubRank {
+    club_id: number
+    club_name: string
+    post_count: number
+    rank?: number   // 后端可能返回排名
+}

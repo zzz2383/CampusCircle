@@ -2,14 +2,17 @@
     <div class="home-container">
         <!-- 顶部导航复用已有布局，可抽取为公共组件 -->
         <div class="navbar">
-            <div class="logo">CampusCircle</div>
-            <div class="user-info">
-                <el-avatar :size="40" :src="userStore.user?.avatar_url || undefined">
-                    {{ userStore.user?.nickname?.charAt(0) }}
-                </el-avatar>
-                <span class="nickname">{{ userStore.user?.nickname || '游客' }}</span>
-                <el-button v-if="!userStore.isLoggedIn" @click="router.push('/auth')" text>登录</el-button>
-                <el-button v-else @click="handleLogout" text>退出</el-button>
+            <div class="logo">校园圈</div>
+            <div class="nav-links">
+                <el-button link @click="router.push('/rank')">排行榜</el-button>
+                <div class="user-info">
+                    <el-avatar :size="40" :src="userStore.user?.avatar_url || undefined">
+                        {{ userStore.user?.nickname?.charAt(0) }}
+                    </el-avatar>
+                    <span class="nickname">{{ userStore.user?.nickname || '游客' }}</span>
+                    <el-button v-if="!userStore.isLoggedIn" @click="router.push('/auth')" text>登录</el-button>
+                    <el-button v-else @click="handleLogout" text>退出</el-button>
+                </div>
             </div>
         </div>
 
@@ -393,5 +396,11 @@ onMounted(async () => {
     .search-input {
         width: 100%;
     }
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 </style>
