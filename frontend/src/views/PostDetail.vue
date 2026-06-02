@@ -314,7 +314,8 @@ const submitReply = async (parentId: number) => {
 
 const formatTime = (iso: string) => {
     if (!iso) return '未知时间'
-    const date = new Date(iso)
+    // 后端存储的是 UTC 时间，加 Z 后缀让浏览器正确转换为本地时区
+    const date = new Date(iso.endsWith('Z') ? iso : iso + 'Z')
     if (isNaN(date.getTime())) return '无效时间'
     const now = new Date()
     const diff = now.getTime() - date.getTime()

@@ -208,7 +208,8 @@ const handleLogout = async () => {
 
 // 时间格式化
 const formatTime = (iso: string) => {
-    const date = new Date(iso)
+    // 后端存储的是 UTC 时间，加 Z 后缀让浏览器正确转换为本地时区
+    const date = new Date(iso.endsWith('Z') ? iso : iso + 'Z')
     const now = new Date()
     const diff = now.getTime() - date.getTime()
     if (diff < 60 * 60 * 1000) return `${Math.floor(diff / 60000)}分钟前`
