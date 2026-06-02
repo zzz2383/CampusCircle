@@ -1,0 +1,26 @@
+"""事件数据访问实现"""
+from typing import List, Optional
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.data_access.sqlite_dao.event_dao import IEventDAO
+from app.models.domain import Event
+
+
+class EventDAOImpl(IEventDAO):
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def insert(self, event: Event) -> int:
+        self.session.add(event)
+        await self.session.flush()
+        return event.id
+
+    async def get_by_id(self, event_id: int) -> Optional[Event]:
+        result = await self.session.execute(
+            select(Event).where(Event.id == event_id))
+        return result.scalar_one_or_none()
+
+    async def list_events(self, offset: int = 0, limit: int = 20) -> List[Event]:
+        result = await self.session.execute(
+            select(Event).order_by(Event.created_at.desc()).offset(offset).limit(limit))
+        return result.scalars().all()

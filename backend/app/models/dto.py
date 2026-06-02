@@ -148,6 +148,32 @@ class ClubDTO(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ========== 活动相关 ==========
+
+class EventCreateRequest(BaseModel):
+    """创建活动请求"""
+    title: str = Field(..., min_length=1, max_length=200, description="活动标题")
+    description: str = Field(..., min_length=1, description="活动描述")
+    location: Optional[str] = Field(None, max_length=200, description="活动地点")
+    max_participants: Optional[int] = Field(None, ge=1, description="最大参与人数")
+    start_time: datetime = Field(..., description="开始时间（ISO 格式）")
+    end_time: datetime = Field(..., description="结束时间（ISO 格式）")
+
+
+class EventDTO(BaseModel):
+    """活动信息 DTO"""
+    id: int
+    title: str
+    description: str
+    location: Optional[str] = None
+    max_participants: Optional[int] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
 # ========== 排行榜相关 ==========
 
 class ClubRankDTO(BaseModel):

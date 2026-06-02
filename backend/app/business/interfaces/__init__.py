@@ -5,6 +5,7 @@ from app.business.interfaces.rank_service import IRankService
 from app.business.interfaces.comment_service import ICommentService
 from app.business.interfaces.notification_service import INotificationService
 from app.business.interfaces.club_service import IClubService
+from app.business.interfaces.event_service import IEventService
 
 __all__ = [
     "IUserService",
@@ -14,4 +15,5 @@ __all__ = [
     "ICommentService",
     "INotificationService",
     "IClubService",
+    "IEventService",
 ]

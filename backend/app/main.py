@@ -24,7 +24,7 @@ from app.infrastructure.exceptions import AppException
 from app.infrastructure.logger import get_logger
 from app.infrastructure.db import init_db, close_db
 from app.infrastructure.redis_client import get_redis, close_redis
-from app.presentation.api import auth, posts, likes, rank, notifications, comments, clubs
+from app.presentation.api import auth, posts, likes, rank, notifications, comments, clubs, events
 from app.presentation.websocket.handler import websocket_handler
 
 logger = get_logger(__name__)
@@ -86,6 +86,7 @@ def create_app() -> FastAPI:
     app.include_router(notifications.router)
     app.include_router(comments.router)
     app.include_router(clubs.router)
+    app.include_router(events.router)
 
     # WebSocket
     from fastapi import Query
