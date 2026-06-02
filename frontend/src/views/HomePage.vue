@@ -42,7 +42,7 @@
             <el-empty description="暂无帖子，发布第一条吧～" />
         </div>
         <div v-else>
-            <div v-for="post in postStore.posts" :key="post.id" class="post-card">
+            <div v-for="post in postStore.posts" :key="post.id" class="post-card" @click="goToPost(post.id)">
                 <div class="card-header">
                     <div class="author">
                         <el-avatar :size="36">{{ post.author_nickname.charAt(0) }}</el-avatar>
@@ -52,7 +52,8 @@
                         </div>
                     </div>
                 </div>
-                <router-link :to="`/posts/${post.id}`" class="post-title">{{ post.title }}</router-link>
+                <!-- 标题改为普通 div，不再使用 router-link -->
+                <div class="post-title">{{ post.title }}</div>
                 <div class="post-content">{{ post.content }}</div>
                 <div class="tags" v-if="post.tags">
                     <el-tag v-for="t in post.tags.split(',')" :key="t" size="small" effect="plain">
@@ -208,6 +209,11 @@ const formatTime = (iso: string) => {
     return `${date.getMonth() + 1}/${date.getDate()}`
 }
 
+//跳转详细页面
+const goToPost = (postId: number) => {
+    router.push(`/posts/${postId}`)
+}
+
 onMounted(async () => {
     if (userStore.isLoggedIn) {
         await postStore.fetchPosts()
@@ -285,6 +291,16 @@ onMounted(async () => {
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
         transform: translateY(-2px);
     }
+}
+
+.post-card {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.post-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .card-header {
