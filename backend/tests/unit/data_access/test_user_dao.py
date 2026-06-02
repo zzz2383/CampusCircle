@@ -20,7 +20,7 @@ from sqlalchemy import select
 
 from app.data_access.sqlite_dao.user_dao_impl import UserDAOImpl
 from app.models.domain import User
-from app.models.enums import UserRole
+from app.models.enums import UserRole, Gender
 
 
 @pytest.mark.asyncio
@@ -121,3 +121,64 @@ async def test_update_online_status(db_session):
     found = await dao.get_by_id(user_id)
     assert found is not None
     assert found.is_online is False
+
+
+@pytest.mark.asyncio
+async def test_update_profile(db_session):
+    """测试更新个人资料"""
+    dao = UserDAOImpl(db_session)
+    user = User(
+        student_id="2024005",
+        email="test5@campus.edu",
+        nickname="旧昵称",
+        password_hash="hash5",
+    )
+    user_id = await dao.insert(user)
+
+    # 更新昵称和院系
+    await dao.update_profile(user_id, nickname="新昵称", department="计算机学院")
+
+    found = await dao.get_by_id(user_id)
+    assert found.nickname == "新昵称"
+    assert found.department == "计算机学院"
+
+
+@pytest.mark.asyncio
+async def test_update_profile_partial(db_session):
+    """测试只更新部分字段，其他字段不受影响"""
+    dao = UserDAOImpl(db_session)
+    user = User(
+        student_id="2024006",
+        email="test6@campus.edu",
+        nickname="用户6",
+        password_hash="hash6",
+        department="原院系",
+        grade="2024级",
+    )
+    user_id = await dao.insert(user)
+
+    # 只更新年级
+    await dao.update_profile(user_id, grade="2025级")
+
+    found = await dao.get_by_id(user_id)
+    assert found.grade == "2025级"
+    assert found.nickname == "用户6"  # 不应变化
+    assert found.department == "原院系"  # 不应变化
+
+
+@pytest.mark.asyncio
+async def test_update_profile_with_gender(db_session):
+    """测试更新性别字段"""
+    dao = UserDAOImpl(db_session)
+    user = User(
+        student_id="2024007",
+        email="test7@campus.edu",
+        nickname="用户7",
+        password_hash="hash7",
+    )
+    user_id = await dao.insert(user)
+
+    await dao.update_profile(user_id, gender=Gender.MALE)
+
+    found = await dao.get_by_id(user_id)
+    assert found.gender == Gender.MALE

@@ -18,7 +18,7 @@
 from fastapi import APIRouter, Depends, status
 
 from app.business.interfaces import IUserService
-from app.models.dto import UserRegisterRequest, UserLoginRequest, UserDTO, TokenDTO
+from app.models.dto import UserRegisterRequest, UserLoginRequest, UserDTO, TokenDTO, UserProfileUpdateRequest
 from app.presentation.dependencies import get_user_service, get_current_user
 
 router = APIRouter(prefix="/api/auth", tags=["认证"])
@@ -65,3 +65,23 @@ async def get_current_user_info(
     - 返回当前用户的详细信息
     """
     return current_user
+
+
+@router.put("/profile", response_model=UserDTO)
+async def update_profile(
+    request: UserProfileUpdateRequest,
+    current_user: UserDTO = Depends(get_current_user),
+    user_service: IUserService = Depends(get_user_service),
+):
+    """
+    更新个人资料
+
+    - 需要登录
+    - 只更新传入的非 None 字段
+    - 支持更新: nickname, department, grade, gender, avatar_url
+    """
+    result = await user_service.update_profile(user_id=current_user.id, request=request)
+    if result is None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="用户不存在")
+    return result

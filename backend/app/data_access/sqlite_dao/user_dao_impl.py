@@ -101,3 +101,20 @@ class UserDAOImpl(IUserDAO):
             .where(User.id == user_id)
             .values(is_online=is_online)
         )
+
+    async def update_profile(self, user_id: int, **kwargs) -> None:
+        """更新用户个人资料
+
+        实现逻辑：
+            1. 过滤掉值为 None 的字段（不更新这些字段）
+            2. 执行 UPDATE users SET ... WHERE id = :user_id
+
+        参数：
+            user_id: 用户 ID
+            **kwargs: 要更新的字段键值对
+        """
+        update_values = {k: v for k, v in kwargs.items() if v is not None}
+        if update_values:
+            await self.session.execute(
+                update(User).where(User.id == user_id).values(**update_values)
+            )

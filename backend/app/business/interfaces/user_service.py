@@ -12,7 +12,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from app.models.dto import UserRegisterRequest, UserLoginRequest, UserDTO, TokenDTO
+from app.models.dto import UserRegisterRequest, UserLoginRequest, UserDTO, TokenDTO, UserProfileUpdateRequest
 
 
 class IUserService(ABC):
@@ -71,4 +71,26 @@ class IUserService(ABC):
     @abstractmethod
     async def get_user_by_id(self, user_id: int) -> Optional[UserDTO]:
         """获取用户信息"""
+        ...
+
+    @abstractmethod
+    async def update_profile(self, user_id: int, request: UserProfileUpdateRequest) -> UserDTO:
+        """更新个人资料
+
+        实现逻辑：
+            1. 只更新传入的非 None 字段
+            2. 支持更新: nickname, department, grade, gender, avatar_url
+            3. 返回更新后的 UserDTO
+
+        参数：
+            user_id: 用户 ID
+            request: 个人资料更新请求
+
+        返回值：
+            UserDTO: 更新后的用户信息
+
+        测试用例：
+            - test_update_profile_success
+            - test_update_profile_partial
+        """
         ...

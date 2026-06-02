@@ -66,3 +66,17 @@ class IUserDAO(ABC):
             is_online: 是否在线
         """
         ...
+
+    @abstractmethod
+    async def update_profile(self, user_id: int, **kwargs) -> None:
+        """更新用户个人资料
+
+        实现逻辑：
+            动态更新用户资料字段（nickname, department, grade, gender, avatar_url）
+            只更新传入的非 None 字段
+
+        参数：
+            user_id: 用户 ID
+            **kwargs: 要更新的字段键值对
+        """
+        ...

@@ -24,7 +24,7 @@ from app.business.impl.user_service_impl import UserServiceImpl
 from app.business.impl.auth_utils import hash_password
 from app.data_access.sqlite_dao.user_dao import IUserDAO
 from app.models.domain import User
-from app.models.dto import UserRegisterRequest, UserLoginRequest
+from app.models.dto import UserRegisterRequest, UserLoginRequest, UserProfileUpdateRequest
 from app.models.enums import UserRole
 from app.infrastructure.exceptions import DuplicateError, AuthError
 
@@ -216,3 +216,73 @@ async def test_get_user_by_id_not_found(service, mock_dao, mock_session):
 
     # Assert
     assert result is None
+
+
+# ========== 更新个人资料测试 ==========
+
+
+@pytest.mark.asyncio
+async def test_update_profile_success(service, mock_dao, mock_session):
+    """测试更新个人资料成功"""
+    user = create_sample_user()
+    mock_dao.get_by_id.return_value = user
+    request = UserProfileUpdateRequest(
+        nickname="新昵称",
+        department="计算机学院",
+    )
+
+    result = await service.update_profile(user_id=1, request=request)
+
+    assert result is not None
+    mock_dao.update_profile.assert_awaited_once_with(1, nickname="新昵称", department="计算机学院")
+    mock_session.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_update_profile_all_fields(service, mock_dao, mock_session):
+    """测试更新所有可选字段"""
+    from app.models.enums import Gender
+    user = create_sample_user()
+    mock_dao.get_by_id.return_value = user
+    request = UserProfileUpdateRequest(
+        nickname="新昵称",
+        department="计算机学院",
+        grade="2024级",
+        gender=Gender.MALE,
+        avatar_url="http://example.com/avatar.jpg",
+    )
+
+    result = await service.update_profile(user_id=1, request=request)
+
+    assert result is not None
+    mock_dao.update_profile.assert_awaited_once_with(
+        1, nickname="新昵称", department="计算机学院",
+        grade="2024级", gender=Gender.MALE,
+        avatar_url="http://example.com/avatar.jpg",
+    )
+
+
+@pytest.mark.asyncio
+async def test_update_profile_empty_request(service, mock_dao, mock_session):
+    """测试空请求（所有字段为 None），不应调用 update_profile"""
+    user = create_sample_user()
+    mock_dao.get_by_id.return_value = user
+    request = UserProfileUpdateRequest()
+
+    result = await service.update_profile(user_id=1, request=request)
+
+    assert result is not None
+    mock_dao.update_profile.assert_not_awaited()
+    mock_session.commit.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_update_profile_user_not_found(service, mock_dao, mock_session):
+    """测试更新不存在的用户"""
+    mock_dao.get_by_id.return_value = None
+    request = UserProfileUpdateRequest(nickname="新昵称")
+
+    result = await service.update_profile(user_id=999, request=request)
+
+    assert result is None
+    mock_dao.update_profile.assert_not_awaited()

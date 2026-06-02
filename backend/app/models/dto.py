@@ -12,6 +12,8 @@ from typing import Optional, List
 
 from pydantic import BaseModel, Field, EmailStr
 
+from app.models.enums import Gender
+
 
 # ========== 用户相关 ==========
 
@@ -21,6 +23,9 @@ class UserRegisterRequest(BaseModel):
     email: str = Field(..., max_length=100, description="校园邮箱")
     password: str = Field(..., min_length=6, max_length=64, description="密码")
     nickname: str = Field(..., min_length=1, max_length=50, description="昵称")
+    department: Optional[str] = Field(None, max_length=100, description="院系")
+    grade: Optional[str] = Field(None, max_length=20, description="年级")
+    gender: Optional[Gender] = Field(None, description="性别")
 
 
 class UserLoginRequest(BaseModel):
@@ -38,6 +43,7 @@ class UserDTO(BaseModel):
     role: str
     department: Optional[str] = None
     grade: Optional[str] = None
+    gender: Optional[Gender] = None
     avatar_url: Optional[str] = None
     is_online: bool = False
     created_at: Optional[datetime] = None
@@ -50,6 +56,15 @@ class TokenDTO(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserDTO
+
+
+class UserProfileUpdateRequest(BaseModel):
+    """更新个人资料请求"""
+    nickname: Optional[str] = Field(None, min_length=1, max_length=50, description="昵称")
+    department: Optional[str] = Field(None, max_length=100, description="院系")
+    grade: Optional[str] = Field(None, max_length=20, description="年级")
+    gender: Optional[Gender] = Field(None, description="性别")
+    avatar_url: Optional[str] = Field(None, max_length=256, description="头像 URL")
 
 
 # ========== 帖子相关 ==========

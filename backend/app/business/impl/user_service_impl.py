@@ -38,6 +38,7 @@ from app.models.dto import (
     UserLoginRequest,
     UserDTO,
     TokenDTO,
+    UserProfileUpdateRequest,
 )
 
 logger = get_logger(__name__)
@@ -90,6 +91,9 @@ class UserServiceImpl(IUserService):
             email=request.email,
             nickname=request.nickname,
             password_hash=password_hash,
+            department=request.department,
+            grade=request.grade,
+            gender=request.gender,
         )
 
         # 4. 写入数据库
@@ -173,3 +177,42 @@ class UserServiceImpl(IUserService):
         if user is None:
             return None
         return UserDTO.model_validate(user)
+
+    async def update_profile(self, user_id: int, request: UserProfileUpdateRequest) -> UserDTO:
+        """
+        更新个人资料
+
+        实现逻辑：
+            1. 检查用户是否存在
+            2. 调用 DAO.update_profile 更新非空字段
+            3. 提交事务
+            4. 返回更新后的 UserDTO
+
+        参数：
+            user_id: 用户 ID
+            request: 个人资料更新请求
+
+        返回值：
+            UserDTO: 更新后的用户信息
+
+        异常：
+            - 用户不存在时由 get_by_id 返回 None，由表现层处理
+        """
+        # 1. 检查用户是否存在
+        existing = await self.user_dao.get_by_id(user_id)
+        if existing is None:
+            return None
+
+        # 2. 更新资料（只更新非 None 字段）
+        update_data = request.model_dump(exclude_none=True)
+        if not update_data:
+            return UserDTO.model_validate(existing)
+
+        await self.user_dao.update_profile(user_id, **update_data)
+        await self.db_session.commit()
+
+        logger.info(f"User profile updated: id={user_id}, fields={list(update_data.keys())}")
+
+        # 3. 返回更新后的用户信息
+        updated = await self.user_dao.get_by_id(user_id)
+        return UserDTO.model_validate(updated)
