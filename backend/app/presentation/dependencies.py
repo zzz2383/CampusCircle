@@ -14,6 +14,8 @@
     - 调用 business/impl 的具体实现类
 """
 
+from typing import Optional
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,7 +44,8 @@ from app.infrastructure.db import get_db
 from app.infrastructure.redis_client import get_redis
 from app.models.dto import UserDTO
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
+security_required = HTTPBearer(auto_error=True)
 
 
 async def get_user_service(db: AsyncSession = Depends(get_db)) -> IUserService:
@@ -52,7 +55,7 @@ async def get_user_service(db: AsyncSession = Depends(get_db)) -> IUserService:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials = Depends(security_required),
     user_service: IUserService = Depends(get_user_service),
 ) -> UserDTO:
     """依赖注入：获取当前登录用户（JWT 认证）"""
@@ -85,10 +88,23 @@ async def get_current_user(
     return user
 
 
-async def get_post_service(db: AsyncSession = Depends(get_db)) -> IPostService:
-    """依赖注入：获取 PostService 实例"""
-    post_dao = PostDAOImpl(db)
-    return PostServiceImpl(post_dao=post_dao, db_session=db)
+async def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    user_service: IUserService = Depends(get_user_service),
+) -> Optional[UserDTO]:
+    """依赖注入：可选的当前用户（未登录时返回 None）"""
+    if credentials is None:
+        return None
+    payload = decode_access_token(credentials.credentials)
+    if payload is None:
+        return None
+    user_id_str = payload.get("sub")
+    if user_id_str is None:
+        return None
+    try:
+        return await user_service.get_user_by_id(int(user_id_str))
+    except Exception:
+        return None
 
 
 async def get_redis_client():
@@ -107,6 +123,20 @@ async def get_redis_client():
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Redis 服务不可用，该功能需要 Redis。请执行 docker compose up -d 启动 Redis。",
         )
+
+
+async def get_post_service(
+    redis=Depends(get_redis_client),
+    db: AsyncSession = Depends(get_db),
+) -> IPostService:
+    """依赖注入：获取 PostService 实例（含可选 Redis 点赞数据）"""
+    post_dao = PostDAOImpl(db)
+    like_repo = LikeRepositoryImpl(redis) if redis else None
+    return PostServiceImpl(
+        post_dao=post_dao,
+        db_session=db,
+        like_repo=like_repo,
+    )
 
 
 async def get_notification_service(

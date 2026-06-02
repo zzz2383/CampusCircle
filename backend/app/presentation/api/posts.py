@@ -4,12 +4,9 @@
 实现逻辑：
     1. POST /api/posts — 发布帖子（需登录）
     2. GET /api/posts — 获取帖子列表（分页 + 标签筛选）
-    3. GET /api/posts/{id} — 获取帖子详情
-    4. DELETE /api/posts/{id} — 删除帖子（仅作者）
-
-调用链路：
-    - 调用 IPostService 接口（通过依赖注入）
-    - 认证依赖：get_current_user（JWT Bearer Token）
+    3. GET /api/posts/{id} — 获取帖子详情（如果登录，返回点赞状态）
+    4. POST /api/posts/{id}/view — 增加浏览量
+    5. DELETE /api/posts/{id} — 删除帖子（仅作者）
 """
 
 from typing import Optional
@@ -19,7 +16,11 @@ from fastapi import APIRouter, Depends, Path, Query, status
 from app.business.interfaces import IPostService
 from app.models.dto import PostCreateRequest, PostDTO, PostListResponse
 from app.models.dto import UserDTO
-from app.presentation.dependencies import get_post_service, get_current_user
+from app.presentation.dependencies import (
+    get_post_service,
+    get_current_user,
+    get_current_user_optional,
+)
 
 router = APIRouter(prefix="/api/posts", tags=["帖子"])
 
@@ -49,9 +50,11 @@ async def list_posts(
 async def get_post(
     post_id: int,
     post_service: IPostService = Depends(get_post_service),
+    current_user: Optional[UserDTO] = Depends(get_current_user_optional),
 ):
-    """获取帖子详情"""
-    return await post_service.get_post_by_id(post_id=post_id)
+    """获取帖子详情（如果已登录，返回真实的点赞状态）"""
+    uid = current_user.id if current_user else None
+    return await post_service.get_post_by_id(post_id=post_id, current_user_id=uid)
 
 
 @router.post("/{post_id}/view")
