@@ -21,6 +21,11 @@ class IClubDAO(ABC):
         ...
 
     @abstractmethod
+    async def insert(self, club: Club) -> int:
+        """创建社团"""
+        ...
+
+    @abstractmethod
     async def get_all(self) -> List[Club]:
         """获取所有社团"""
         ...

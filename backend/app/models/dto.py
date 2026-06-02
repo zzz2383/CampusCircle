@@ -129,6 +129,25 @@ class LikeResultDTO(BaseModel):
     like_count: int
 
 
+# ========== 社团相关 ==========
+
+class ClubCreateRequest(BaseModel):
+    """创建社团请求"""
+    name: str = Field(..., min_length=1, max_length=100, description="社团名称")
+    description: Optional[str] = Field(None, description="社团简介")
+
+
+class ClubDTO(BaseModel):
+    """社团信息 DTO"""
+    id: int
+    name: str
+    description: Optional[str] = None
+    logo_url: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
 # ========== 排行榜相关 ==========
 
 class ClubRankDTO(BaseModel):

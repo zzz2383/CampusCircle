@@ -20,6 +20,11 @@ class ClubDAOImpl(IClubDAO):
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    async def insert(self, club: Club) -> int:
+        self.session.add(club)
+        await self.session.flush()
+        return club.id
+
     async def get_by_id(self, club_id: int) -> Optional[Club]:
         result = await self.session.execute(
             select(Club).where(Club.id == club_id)

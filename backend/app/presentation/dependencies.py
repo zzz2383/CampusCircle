@@ -26,12 +26,14 @@ from app.business.interfaces.like_service import ILikeService
 from app.business.interfaces.rank_service import IRankService
 from app.business.interfaces.comment_service import ICommentService
 from app.business.interfaces.notification_service import INotificationService
+from app.business.interfaces.club_service import IClubService
 from app.business.impl.user_service_impl import UserServiceImpl
 from app.business.impl.post_service_impl import PostServiceImpl
 from app.business.impl.like_service_impl import LikeServiceImpl
 from app.business.impl.rank_service_impl import RankServiceImpl
 from app.business.impl.comment_service_impl import CommentServiceImpl
 from app.business.impl.notification_service_impl import NotificationServiceImpl
+from app.business.impl.club_service_impl import ClubServiceImpl
 from app.business.impl.auth_utils import decode_access_token
 from app.data_access.sqlite_dao.user_dao_impl import UserDAOImpl
 from app.data_access.sqlite_dao.post_dao_impl import PostDAOImpl
@@ -184,6 +186,14 @@ async def get_rank_service(
         post_dao=post_dao,
         club_dao=club_dao,
     )
+
+
+async def get_club_service(
+    db: AsyncSession = Depends(get_db),
+) -> IClubService:
+    """依赖注入：获取 ClubService 实例"""
+    club_dao = ClubDAOImpl(db)
+    return ClubServiceImpl(club_dao=club_dao, db_session=db)
 
 
 async def get_comment_service(
