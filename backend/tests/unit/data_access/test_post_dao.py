@@ -206,6 +206,27 @@ async def test_increment_view_count(db_session, sample_user):
 
 
 @pytest.mark.asyncio
+async def test_list_by_user(db_session, sample_user):
+    """测试获取用户的帖子列表"""
+    dao = PostDAOImpl(db_session)
+    # 创建 3 个帖子
+    for i in range(3):
+        await dao.insert(Post(
+            user_id=sample_user.id, title=f"我的帖子{i}", content=f"正文{i}"))
+    # 另一个用户发 1 个
+    other = User(student_id="u2", email="o@c.com", nickname="其他",
+                 password_hash="h", role=UserRole.STUDENT)
+    db_session.add(other)
+    await db_session.flush()
+    await dao.insert(Post(user_id=other.id, title="别人的帖子", content="正文"))
+
+    my_posts = await dao.list_by_user(user_id=sample_user.id, offset=0, limit=10)
+    assert len(my_posts) == 3
+    for p in my_posts:
+        assert p.title.startswith("我的帖子")
+
+
+@pytest.mark.asyncio
 async def test_count_comments(db_session, sample_user):
     """测试获取评论数"""
     from app.models.domain import Comment

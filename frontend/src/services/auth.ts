@@ -1,7 +1,6 @@
 import request from './request'
-import type { LoginPayload, RegisterPayload, User } from '@/types'
+import type { LoginPayload, RegisterPayload, User, UpdateProfilePayload } from '@/types'
 
-// 假设后端登录返回结构包含 refresh_token
 export interface LoginResponse {
     access_token: string
     refresh_token: string
@@ -22,6 +21,14 @@ export const register = async (payload: RegisterPayload): Promise<User> => {
 
 export const getUserInfo = async (): Promise<User> => {
     return await request.get('/auth/me')
+}
+
+/**
+ * 更新个人资料
+ * PUT /api/auth/profile
+ */
+export const updateProfile = async (payload: UpdateProfilePayload): Promise<User> => {
+    return await request.put<never, User>('/auth/profile', payload)
 }
 
 export const logout = () => {

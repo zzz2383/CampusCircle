@@ -186,3 +186,31 @@ class PostDAOImpl(IPostDAO):
             .where(Comment.post_id == post_id, Comment.is_active.is_(True))
         )
         return result.scalar() or 0
+
+    async def list_by_user(
+        self, user_id: int, offset: int = 0, limit: int = 20
+    ) -> List[Post]:
+        """获取用户的帖子列表
+
+        实现逻辑：
+            1. 按 user_id 过滤
+            2. 按 created_at 降序排列
+            3. 只返回未软删除的帖子
+
+        参数：
+            user_id: 用户 ID
+            offset: 分页偏移量
+            limit: 每页数量
+
+        返回值：
+            Post ORM 对象列表
+        """
+        result = await self.session.execute(
+            select(Post)
+            .options(joinedload(Post.author))
+            .where(Post.user_id == user_id, Post.is_active.is_(True))
+            .order_by(Post.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        return result.unique().scalars().all()

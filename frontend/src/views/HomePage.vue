@@ -6,10 +6,12 @@
             <div class="nav-links">
                 <el-button link @click="router.push('/rank')">排行榜</el-button>
                 <div class="user-info">
-                    <el-avatar :size="40" :src="userStore.user?.avatar_url || undefined">
-                        {{ userStore.user?.nickname?.charAt(0) }}
-                    </el-avatar>
-                    <span class="nickname">{{ userStore.user?.nickname || '游客' }}</span>
+                    <div class="user-profile-trigger" @click="goToProfile">
+                        <el-avatar :size="40" :src="userStore.user?.avatar_url || undefined">
+                            {{ userStore.user?.nickname?.charAt(0) }}
+                        </el-avatar>
+                        <span class="nickname">{{ userStore.user?.nickname || '游客' }}</span>
+                    </div>
                     <el-button v-if="!userStore.isLoggedIn" @click="router.push('/auth')" text>登录</el-button>
                     <el-button v-else @click="handleLogout" text>退出</el-button>
                 </div>
@@ -214,6 +216,16 @@ const goToPost = (postId: number) => {
     router.push(`/posts/${postId}`)
 }
 
+//跳转个人资料页
+const goToProfile = () => {
+    if (userStore.isLoggedIn) {
+        router.push('/profile')
+    } else {
+        // 未登录时也可以跳转登录页（可选）
+        router.push('/auth')
+    }
+}
+
 onMounted(async () => {
     if (userStore.isLoggedIn) {
         await postStore.fetchPosts()
@@ -253,6 +265,24 @@ onMounted(async () => {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .user-profile-trigger {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: opacity 0.2s;
+
+        &:hover {
+            opacity: 0.8;
+        }
+    }
 }
 
 .nickname {

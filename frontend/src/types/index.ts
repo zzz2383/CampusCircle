@@ -1,12 +1,17 @@
 // src/types/index.ts
+// 追加性别枚举
+export type Gender = 'male' | 'female' | 'other'
+
+// 更新 UserDTO（后端已补 gender）
 export interface User {
     id: number
-    student_id: string          // snake_case 匹配后端
+    student_id: string
     email: string
     nickname: string
     role: 'student' | 'teacher' | 'admin'
     department: string | null
     grade: string | null
+    gender: Gender | null
     avatar_url: string | null
     is_online: boolean
     created_at: string
@@ -23,14 +28,17 @@ export interface LoginPayload {
     password: string
 }
 
+// 注册请求体（扩充）
 export interface RegisterPayload {
     student_id: string
     email: string
     password: string
     nickname?: string
-    department?: string   // 可选，后端接受但可能暂时忽略
+    department?: string
     grade?: string
+    gender?: Gender
 }
+
 
 export interface PostDTO {
     id: number
@@ -96,4 +104,13 @@ export interface ClubRank {
     club_name: string
     post_count: number
     rank?: number   // 后端可能返回排名
+}
+
+// 更新个人资料请求体（全部可选）
+export interface UpdateProfilePayload {
+    nickname?: string
+    department?: string
+    grade?: string
+    gender?: Gender
+    avatar_url?: string
 }

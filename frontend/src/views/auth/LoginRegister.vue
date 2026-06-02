@@ -64,6 +64,13 @@
                                     <el-option label="研究生/教师" value="研究生/教师" />
                                 </el-select>
                             </el-form-item>
+                            <el-form-item label="性别" prop="gender">
+                                <el-radio-group v-model="registerForm.gender">
+                                    <el-radio value="male">男</el-radio>
+                                    <el-radio value="female">女</el-radio>
+                                    <el-radio value="other">其他</el-radio>
+                                </el-radio-group>
+                            </el-form-item>
                         </div>
                         <el-form-item label="密码" prop="password">
                             <el-input v-model="registerForm.password" type="password" placeholder="至少6位，字母数字组合"
@@ -121,8 +128,9 @@ const registerForm = reactive<RegisterPayload & { confirmPassword: string }>({
     student_id: '',
     email: '',
     nickname: '',
-    department: '',   // 后端可能忽略，但可传
+    department: '',
     grade: '',
+    gender: 'male',
     password: '',
     confirmPassword: '',
 })
@@ -204,11 +212,13 @@ const handleRegister = async () => {
                 const { confirmPassword, ...registerData } = registerForm
                 // 确保字段名与后端一致
                 await apiRegister({
-                    student_id: registerData.student_id,
-                    email: registerData.email,
-                    password: registerData.password,
-                    nickname: registerData.nickname || undefined,
-                    // department 和 grade 若后端暂时不支持，可忽略，但传了也没坏处
+                    student_id: registerForm.student_id,
+                    email: registerForm.email,
+                    password: registerForm.password,
+                    nickname: registerForm.nickname || undefined,
+                    department: registerForm.department || undefined,
+                    grade: registerForm.grade || undefined,
+                    gender: registerForm.gender || undefined,
                 })
                 ElMessage.success('注册成功，请登录')
                 activeTab.value = 'login'

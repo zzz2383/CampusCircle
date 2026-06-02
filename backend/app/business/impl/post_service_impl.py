@@ -103,6 +103,21 @@ class PostServiceImpl(IPostService):
             limit=limit,
         )
 
+    async def get_user_posts(
+        self, user_id: int, offset: int = 0, limit: int = 20
+    ) -> PostListResponse:
+        """获取用户的帖子列表"""
+        posts = await self.post_dao.list_by_user(
+            user_id=user_id, offset=offset, limit=limit
+        )
+        items = [await self._to_dto(p) for p in posts]
+        return PostListResponse(
+            items=items,
+            total=len(items),
+            offset=offset,
+            limit=limit,
+        )
+
     async def increment_view_count(self, post_id: int) -> int:
         count = await self.post_dao.increment_view_count(post_id)
         await self.db_session.commit()

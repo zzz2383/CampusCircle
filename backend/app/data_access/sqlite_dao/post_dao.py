@@ -107,3 +107,19 @@ class IPostDAO(ABC):
             该帖子的评论总数（未软删除的）
         """
         ...
+
+    @abstractmethod
+    async def list_by_user(
+        self, user_id: int, offset: int = 0, limit: int = 20
+    ) -> List[Post]:
+        """获取用户的帖子列表
+
+        参数：
+            user_id: 用户 ID
+            offset: 分页偏移量
+            limit: 每页数量
+
+        返回值：
+            Post ORM 对象列表
+        """
+        ...

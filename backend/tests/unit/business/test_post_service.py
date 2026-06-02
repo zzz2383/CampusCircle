@@ -178,3 +178,19 @@ async def test_post_dto_has_real_comment_count(service, mock_post_dao, mock_sess
 
     assert result.comment_count == 5
     mock_post_dao.count_comments.assert_awaited_once_with(1)
+
+
+@pytest.mark.asyncio
+async def test_get_user_posts(service, mock_post_dao, mock_session):
+    """测试获取用户帖子列表"""
+    mock_post_dao.list_by_user.return_value = [
+        make_post(post_id=3, user_id=1, title="帖子A"),
+        make_post(post_id=2, user_id=1, title="帖子B"),
+    ]
+
+    result = await service.get_user_posts(user_id=1, offset=0, limit=10)
+
+    assert len(result.items) == 2
+    assert result.items[0].title == "帖子A"
+    mock_post_dao.list_by_user.assert_awaited_once_with(
+        user_id=1, offset=0, limit=10)

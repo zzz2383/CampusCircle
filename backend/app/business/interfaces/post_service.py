@@ -74,3 +74,23 @@ class IPostService(ABC):
             更新后的浏览量
         """
         ...
+
+    @abstractmethod
+    async def get_user_posts(
+        self, user_id: int, offset: int = 0, limit: int = 20
+    ) -> PostListResponse:
+        """获取用户的帖子列表
+
+        实现逻辑：
+            1. 调用 PostDAO.list_by_user 按用户 ID 分页查询
+            2. 转换为 PostDTO 列表（含真实评论/点赞数据）
+
+        参数：
+            user_id: 用户 ID
+            offset: 分页偏移量
+            limit: 每页数量
+
+        返回值：
+            PostListResponse: 帖子列表响应
+        """
+        ...

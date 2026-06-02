@@ -23,6 +23,7 @@ from app.presentation.dependencies import (
 )
 
 router = APIRouter(prefix="/api/posts", tags=["帖子"])
+user_post_router = APIRouter(tags=["帖子"])
 
 
 @router.post("", response_model=PostDTO, status_code=status.HTTP_201_CREATED)
@@ -55,6 +56,19 @@ async def get_post(
     """获取帖子详情（如果已登录，返回真实的点赞状态）"""
     uid = current_user.id if current_user else None
     return await post_service.get_post_by_id(post_id=post_id, current_user_id=uid)
+
+
+@user_post_router.get("/api/users/me/posts", response_model=PostListResponse)
+async def get_my_posts(
+    offset: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: UserDTO = Depends(get_current_user),
+    post_service: IPostService = Depends(get_post_service),
+):
+    """获取当前用户的帖子列表（需要登录）"""
+    return await post_service.get_user_posts(
+        user_id=current_user.id, offset=offset, limit=limit
+    )
 
 
 @router.post("/{post_id}/view")
