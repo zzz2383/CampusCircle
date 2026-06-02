@@ -57,7 +57,7 @@
                     </el-tag>
                 </div>
                 <div class="post-stats">
-                    <div class="stat-item" :class="{ liked: post.is_liked }" @click="() => handleLike(post.id)">
+                    <div class="stat-item">
                         <el-icon>
                             <Star />
                         </el-icon>
@@ -144,19 +144,6 @@ const tagOptions = [
     { label: '失物招领', value: '失物招领' },
 ]
 
-// 点赞处理
-const handleLike = async (postId: number) => {
-    if (!userStore.isLoggedIn) {
-        ElMessage.warning('请先登录')
-        router.push('/auth')
-        return
-    }
-    try {
-        await postStore.toggleLike(postId)
-    } catch {
-        ElMessage.error('操作失败，请重试')
-    }
-}
 
 // 发帖对话框
 const dialogVisible = ref(false)
