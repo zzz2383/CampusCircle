@@ -83,3 +83,27 @@ class IPostDAO(ABC):
             匹配的 Post ORM 对象列表
         """
         ...
+
+    @abstractmethod
+    async def increment_view_count(self, post_id: int) -> int:
+        """增加帖子浏览量（+1）
+
+        参数：
+            post_id: 帖子 ID
+
+        返回值：
+            更新后的浏览量
+        """
+        ...
+
+    @abstractmethod
+    async def count_comments(self, post_id: int) -> int:
+        """获取帖子评论数
+
+        参数：
+            post_id: 帖子 ID
+
+        返回值：
+            该帖子的评论总数（未软删除的）
+        """
+        ...

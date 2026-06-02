@@ -24,7 +24,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.data_access.sqlite_dao.post_dao import IPostDAO
-from app.models.domain import Post
+from app.models.domain import Post, Comment
 
 
 class PostDAOImpl(IPostDAO):
@@ -155,3 +155,34 @@ class PostDAOImpl(IPostDAO):
             .limit(limit)
         )
         return result.unique().scalars().all()
+
+    async def increment_view_count(self, post_id: int) -> int:
+        """增加帖子浏览量
+
+        UPDATE posts SET view_count = view_count + 1 WHERE id = :post_id
+        返回更新后的值
+        """
+        result = await self.session.execute(
+            update(Post)
+            .where(Post.id == post_id)
+            .values(view_count=Post.view_count + 1)
+        )
+        if result.rowcount == 0:
+            return 0
+        # 重新查询获取最新值
+        updated = await self.session.execute(
+            select(Post.view_count).where(Post.id == post_id)
+        )
+        return updated.scalar() or 0
+
+    async def count_comments(self, post_id: int) -> int:
+        """获取帖子评论数
+
+        SELECT COUNT(*) FROM comments WHERE post_id = :post_id AND is_active = True
+        """
+        result = await self.session.execute(
+            select(func.count())
+            .select_from(Comment)
+            .where(Comment.post_id == post_id, Comment.is_active.is_(True))
+        )
+        return result.scalar() or 0

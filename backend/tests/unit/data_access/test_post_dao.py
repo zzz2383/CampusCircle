@@ -182,3 +182,47 @@ async def test_search(db_session, sample_user):
     # 搜索不存在的
     results = await dao.search("不存在", offset=0, limit=10)
     assert len(results) == 0
+
+
+@pytest.mark.asyncio
+async def test_increment_view_count(db_session, sample_user):
+    """测试增加浏览量"""
+    dao = PostDAOImpl(db_session)
+    post = Post(user_id=sample_user.id, title="浏览量测试", content="测试")
+    post_id = await dao.insert(post)
+
+    # 初始为 0
+    found = await dao.get_by_id(post_id)
+    assert found.view_count == 0
+
+    # 增加 1 次
+    new_count = await dao.increment_view_count(post_id)
+    assert new_count == 1
+
+    # 再增加 2 次
+    await dao.increment_view_count(post_id)
+    new_count = await dao.increment_view_count(post_id)
+    assert new_count == 3
+
+
+@pytest.mark.asyncio
+async def test_count_comments(db_session, sample_user):
+    """测试获取评论数"""
+    from app.models.domain import Comment
+
+    dao = PostDAOImpl(db_session)
+    post = Post(user_id=sample_user.id, title="评论计数测试", content="测试")
+    post_id = await dao.insert(post)
+
+    # 初始为 0
+    count = await dao.count_comments(post_id)
+    assert count == 0
+
+    # 添加 2 条评论
+    for i in range(2):
+        c = Comment(post_id=post_id, user_id=sample_user.id, content=f"评论{i}")
+        db_session.add(c)
+    await db_session.flush()
+
+    count = await dao.count_comments(post_id)
+    assert count == 2

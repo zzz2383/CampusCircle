@@ -62,3 +62,15 @@ class IPostService(ABC):
     ) -> PostListResponse:
         """获取帖子列表（支持分页和标签筛选）"""
         ...
+
+    @abstractmethod
+    async def increment_view_count(self, post_id: int) -> int:
+        """增加帖子浏览量
+
+        参数：
+            post_id: 帖子 ID
+
+        返回值：
+            更新后的浏览量
+        """
+        ...

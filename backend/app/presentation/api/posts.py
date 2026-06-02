@@ -14,7 +14,7 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Path, Query, status
 
 from app.business.interfaces import IPostService
 from app.models.dto import PostCreateRequest, PostDTO, PostListResponse
@@ -52,6 +52,16 @@ async def get_post(
 ):
     """获取帖子详情"""
     return await post_service.get_post_by_id(post_id=post_id)
+
+
+@router.post("/{post_id}/view")
+async def view_post(
+    post_id: int = Path(..., description="帖子 ID"),
+    post_service: IPostService = Depends(get_post_service),
+):
+    """增加帖子浏览量"""
+    count = await post_service.increment_view_count(post_id=post_id)
+    return {"view_count": count}
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)

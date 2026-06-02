@@ -153,3 +153,28 @@ async def test_list_posts(service, mock_post_dao, mock_session):
     assert result.offset == 0
     assert result.limit == 10
     mock_post_dao.list_latest.assert_awaited_once_with(offset=0, limit=10, tag=None)
+
+
+@pytest.mark.asyncio
+async def test_increment_view_count_success(service, mock_post_dao, mock_session):
+    """测试增加浏览量"""
+    mock_post_dao.increment_view_count.return_value = 5
+
+    result = await service.increment_view_count(post_id=1)
+
+    assert result == 5
+    mock_post_dao.increment_view_count.assert_awaited_once_with(1)
+    mock_session.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_post_dto_has_real_comment_count(service, mock_post_dao, mock_session):
+    """测试 PostDTO 的 comment_count 来自数据库"""
+    post = make_post(post_id=1, user_id=1)
+    mock_post_dao.get_by_id.return_value = post
+    mock_post_dao.count_comments.return_value = 5
+
+    result = await service.get_post_by_id(post_id=1)
+
+    assert result.comment_count == 5
+    mock_post_dao.count_comments.assert_awaited_once_with(1)
