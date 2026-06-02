@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginRegister from '@/views/auth/LoginRegister.vue'
 import HomePage from '@/views/HomePage.vue'
+import PostDetail from '@/views/PostDetail.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -15,7 +16,11 @@ const router = createRouter({
             name: 'auth',
             component: LoginRegister,
         },
-        // 后续可添加帖子详情页等
+        {
+            path: '/posts/:id',
+            name: 'postDetail',
+            component: PostDetail,
+        },
     ],
 })
 

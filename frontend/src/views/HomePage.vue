@@ -49,7 +49,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="post-title">{{ post.title }}</div>
+                <router-link :to="`/posts/${post.id}`" class="post-title">{{ post.title }}</router-link>
                 <div class="post-content">{{ post.content }}</div>
                 <div class="tags" v-if="post.tags">
                     <el-tag v-for="t in post.tags.split(',')" :key="t" size="small" effect="plain">
