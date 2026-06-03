@@ -10,7 +10,7 @@
         </div>
 
         <div v-if="loading" class="skeleton-wrapper">
-            <el-skeleton :rows="8" animated />
+            <el-skeleton :rows="6" animated />
         </div>
 
         <div v-else-if="user" class="profile-content">
@@ -30,65 +30,37 @@
                     <el-button type="primary" plain @click="openEditDialog">编辑资料</el-button>
                 </div>
 
+                <!-- 仅保留帖子数统计 -->
                 <div class="stats-row">
-                    <div class="stat-item" @click="activeTab = 'followers'">
-                        <div class="stat-number">{{ followersCount }}</div>
-                        <div class="stat-label">粉丝</div>
-                    </div>
-                    <div class="stat-item" @click="activeTab = 'following'">
-                        <div class="stat-number">{{ followingCount }}</div>
-                        <div class="stat-label">关注</div>
-                    </div>
-                    <div class="stat-item" @click="activeTab = 'posts'">
+                    <div class="stat-item">
                         <div class="stat-number">{{ postsCount }}</div>
                         <div class="stat-label">帖子</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tab 内容：我的帖子 / 关注 / 粉丝 -->
-            <div class="tabs-card">
-                <el-tabs v-model="activeTab">
-                    <el-tab-pane label="我的帖子" name="posts">
-                        <div v-if="postsLoading" class="loading-placeholder">加载中...</div>
-                        <div v-else-if="myPosts.length === 0" class="empty-placeholder">暂无帖子</div>
-                        <div v-else>
-                            <div v-for="post in myPosts" :key="post.id" class="post-item" @click="goToPost(post.id)">
-                                <div class="post-title">{{ post.title }}</div>
-                                <div class="post-meta">{{ formatTime(post.created_at) }} · {{ post.like_count }} 点赞
-                                </div>
-                            </div>
-                        </div>
-                    </el-tab-pane>
-
-                    <el-tab-pane label="关注" name="following">
-                        <div v-if="followingLoading" class="loading-placeholder">加载中...</div>
-                        <div v-else-if="followingList.length === 0" class="empty-placeholder">还没有关注任何人</div>
-                        <div v-else>
-                            <div v-for="item in followingList" :key="item.id" class="user-item">
-                                <div class="user-avatar">{{ item.nickname.charAt(0) }}</div>
-                                <div class="user-info">
-                                    <div class="user-nickname">{{ item.nickname }}</div>
-                                    <div class="user-meta">{{ item.student_id }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </el-tab-pane>
-
-                    <el-tab-pane label="粉丝" name="followers">
-                        <div v-if="followersLoading" class="loading-placeholder">加载中...</div>
-                        <div v-else-if="followersList.length === 0" class="empty-placeholder">暂无粉丝</div>
-                        <div v-else>
-                            <div v-for="item in followersList" :key="item.id" class="user-item">
-                                <div class="user-avatar">{{ item.nickname.charAt(0) }}</div>
-                                <div class="user-info">
-                                    <div class="user-nickname">{{ item.nickname }}</div>
-                                    <div class="user-meta">{{ item.student_id }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </el-tab-pane>
-                </el-tabs>
+            <!-- 我的帖子列表 -->
+            <div class="posts-card">
+                <div class="posts-header">
+                    <el-icon>
+                        <Document />
+                    </el-icon>
+                    <span>我的帖子</span>
+                </div>
+                <div v-if="postsLoading" class="loading-placeholder">加载中...</div>
+                <div v-else-if="myPosts.length === 0" class="empty-placeholder">暂无帖子，去发布一条吧～</div>
+                <div v-else>
+                    <div v-for="post in myPosts" :key="post.id" class="post-item" @click="goToPost(post.id)">
+                        <div class="post-title">{{ post.title }}</div>
+                        <div class="post-meta">{{ formatTime(post.created_at) }} · {{ post.like_count }} 点赞 · {{
+                            post.comment_count }} 评论</div>
+                    </div>
+                    <!-- 分页加载更多 -->
+                    <div v-if="hasMorePosts" class="load-more">
+                        <el-button type="primary" plain @click="loadMorePosts"
+                            :loading="postsLoadingMore">加载更多</el-button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -123,7 +95,7 @@
                         <el-radio value="other">其他</el-radio>
                     </el-radio-group>
                 </el-form-item>
-                <!-- 头像上传（可选，先留占位） -->
+                <!-- 头像上传占位 -->
                 <el-form-item label="头像">
                     <el-upload action="#" :auto-upload="false" :show-file-list="false" @change="handleAvatarChange">
                         <el-button size="small">上传头像（演示）</el-button>
@@ -140,34 +112,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import { ArrowLeft, Document } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/userStore'
 import { updateProfile } from '@/services/auth'
-import type { User, Gender } from '@/types'
 import { getMyPosts } from '@/services/post'
+import type { PostDTO, Gender } from '@/types'
 
 const router = useRouter()
 const userStore = useUserStore()
 
-const user = computed(() => userStore.user)
+const user = userStore.user
 const loading = ref(false)
 
-// 统计数据（模拟，后续需对接真实接口）
-const followersCount = ref(0)
-const followingCount = ref(0)
-const postsCount = ref(0)
-
 // 帖子相关
-const activeTab = ref<'posts' | 'following' | 'followers'>('posts')
-const myPosts = ref<any[]>([])
+const myPosts = ref<PostDTO[]>([])
 const postsLoading = ref(false)
-const followingList = ref<any[]>([])
-const followingLoading = ref(false)
-const followersList = ref<any[]>([])
-const followersLoading = ref(false)
+const postsLoadingMore = ref(false)
+const postsCount = ref(0)
+const postsOffset = ref(0)
+const postsLimit = 20
+const hasMorePosts = ref(false)
 
 // 编辑对话框
 const editDialogVisible = ref(false)
@@ -180,67 +147,63 @@ const editForm = ref({
 })
 const saving = ref(false)
 
-// 获取用户统计数据（关注数、粉丝数、帖子数）- 需要后端接口，暂时模拟
-const fetchStats = async () => {
-    // TODO: 对接 GET /api/users/{id}/stats 或类似接口
-    followersCount.value = 128
-    followingCount.value = 86
-    postsCount.value = 12
-}
-
 // 获取我的帖子
-const fetchMyPosts = async () => {
-    postsLoading.value = true
+const fetchMyPosts = async (reset = true) => {
+    if (reset) {
+        postsLoading.value = true
+        postsOffset.value = 0
+    } else {
+        postsLoadingMore.value = true
+    }
     try {
-        const res = await getMyPosts({ offset: 0, limit: 20 })
-        myPosts.value = res.items
+        const res = await getMyPosts({ offset: postsOffset.value, limit: postsLimit })
+        if (reset) {
+            myPosts.value = res.items
+        } else {
+            myPosts.value.push(...res.items)
+        }
         postsCount.value = res.total
+        postsOffset.value += res.items.length
+        hasMorePosts.value = myPosts.value.length < res.total
     } catch (error) {
-        ElMessage.error('加载我的帖子失败')
+        ElMessage.error('加载帖子失败')
     } finally {
         postsLoading.value = false
+        postsLoadingMore.value = false
     }
 }
 
-
-// 监听 Tab 切换，懒加载数据
-const onTabChange = (tabName: string) => {
-    if (tabName === 'posts' && myPosts.value.length === 0) {
-        fetchMyPosts()
-    }
-    // 关注/粉丝接口暂未实现，给出友好提示
-    if (tabName === 'following' || tabName === 'followers') {
-        ElMessage.info('关注/粉丝功能即将开放')
-    }
+const loadMorePosts = () => {
+    if (!hasMorePosts.value || postsLoadingMore.value) return
+    fetchMyPosts(false)
 }
 
 // 编辑资料
 const openEditDialog = () => {
-    if (!user.value) return
+    if (!user) return
     editForm.value = {
-        nickname: user.value.nickname,
-        department: user.value.department || '',
-        grade: user.value.grade || '',
-        gender: user.value.gender || '',
-        avatar_url: user.value.avatar_url || ''
+        nickname: user.nickname,
+        department: user.department || '',
+        grade: user.grade || '',
+        gender: user.gender || '',
+        avatar_url: user.avatar_url || ''
     }
     editDialogVisible.value = true
 }
 
-const handleAvatarChange = (file: any) => {
-    // 演示：仅占位，实际上传需调用上传接口获取 url
-    ElMessage.info('头像上传功能演示，实际需对接文件上传接口')
+const handleAvatarChange = () => {
+    ElMessage.info('头像上传功能即将开放')
 }
 
 const saveProfile = async () => {
     saving.value = true
     try {
         const payload: any = {}
-        if (editForm.value.nickname !== user.value?.nickname) payload.nickname = editForm.value.nickname
-        if (editForm.value.department !== user.value?.department) payload.department = editForm.value.department || null
-        if (editForm.value.grade !== user.value?.grade) payload.grade = editForm.value.grade || null
-        if (editForm.value.gender !== (user.value?.gender || '')) payload.gender = editForm.value.gender || null
-        if (editForm.value.avatar_url !== user.value?.avatar_url) payload.avatar_url = editForm.value.avatar_url || null
+        if (editForm.value.nickname !== user?.nickname) payload.nickname = editForm.value.nickname
+        if (editForm.value.department !== user?.department) payload.department = editForm.value.department || null
+        if (editForm.value.grade !== user?.grade) payload.grade = editForm.value.grade || null
+        if (editForm.value.gender !== (user?.gender || '')) payload.gender = editForm.value.gender || null
+        if (editForm.value.avatar_url !== user?.avatar_url) payload.avatar_url = editForm.value.avatar_url || null
 
         if (Object.keys(payload).length === 0) {
             ElMessage.warning('未作任何修改')
@@ -251,6 +214,8 @@ const saveProfile = async () => {
         userStore.user = updatedUser
         ElMessage.success('资料更新成功')
         editDialogVisible.value = false
+        // 刷新页面显示新昵称
+        window.location.reload()
     } catch (error) {
         ElMessage.error('更新失败')
     } finally {
@@ -258,12 +223,7 @@ const saveProfile = async () => {
     }
 }
 
-// 跳转帖子详情
-const goToPost = (postId: number) => {
-    router.push(`/posts/${postId}`)
-}
-
-// 性别文本转换
+// 性别文本
 const genderText = (gender: Gender) => {
     const map = { male: '男', female: '女', other: '其他' }
     return map[gender] || ''
@@ -279,13 +239,16 @@ const formatTime = (iso: string) => {
     return `${date.getMonth() + 1}/${date.getDate()}`
 }
 
+const goToPost = (postId: number) => {
+    router.push(`/posts/${postId}`)
+}
+
 onMounted(async () => {
     if (!userStore.user) {
         await userStore.initAuth()
     }
     if (userStore.user) {
-        await fetchStats()  // 模拟统计数据，如有接口再替换
-        await fetchMyPosts() // 加载真实帖子
+        await fetchMyPosts()
     }
 })
 </script>
@@ -348,12 +311,10 @@ onMounted(async () => {
 .stats-row {
     display: flex;
     justify-content: center;
-    gap: 3rem;
     margin-top: 1.5rem;
 
     .stat-item {
         text-align: center;
-        cursor: pointer;
 
         .stat-number {
             font-size: 1.5rem;
@@ -364,24 +325,36 @@ onMounted(async () => {
             font-size: 0.8rem;
             color: var(--el-text-color-secondary);
         }
-
-        &:hover .stat-number {
-            color: var(--el-color-primary);
-        }
     }
 }
 
-.tabs-card {
+.posts-card {
     background: #fff;
     border-radius: 1.25rem;
-    padding: 0 1.5rem;
+    padding: 1.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+
+    .posts-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--el-border-color-lighter);
+        margin-bottom: 1rem;
+    }
 }
 
 .post-item {
     padding: 1rem 0;
     border-bottom: 1px solid var(--el-border-color-lighter);
     cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+        background: #f8fafc;
+    }
 
     .post-title {
         font-weight: 600;
@@ -394,36 +367,9 @@ onMounted(async () => {
     }
 }
 
-.user-item {
-    display: flex;
-    align-items: center;
-    padding: 1rem 0;
-    border-bottom: 1px solid var(--el-border-color-lighter);
-
-    .user-avatar {
-        width: 44px;
-        height: 44px;
-        background: #eef2fa;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        margin-right: 1rem;
-    }
-
-    .user-info {
-        flex: 1;
-
-        .user-nickname {
-            font-weight: 600;
-        }
-
-        .user-meta {
-            font-size: 0.7rem;
-            color: var(--el-text-color-secondary);
-        }
-    }
+.load-more {
+    text-align: center;
+    margin-top: 1rem;
 }
 
 .loading-placeholder,

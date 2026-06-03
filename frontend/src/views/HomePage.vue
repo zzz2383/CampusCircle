@@ -5,6 +5,14 @@
             <div class="logo">校园圈</div>
             <div class="nav-links">
                 <el-button link @click="router.push('/rank')">排行榜</el-button>
+                <!-- 通知铃铛 -->
+                <div class="notification-bell" @click="toggleNotificationPanel" ref="bellRef">
+                    <el-badge :value="notificationStore.unreadCount" :hidden="notificationStore.unreadCount === 0">
+                        <el-icon :size="24">
+                            <Bell />
+                        </el-icon>
+                    </el-badge>
+                </div>
                 <div class="user-info">
                     <div class="user-profile-trigger" @click="goToProfile">
                         <el-avatar :size="40" :src="userStore.user?.avatar_url || undefined">
@@ -16,6 +24,8 @@
                     <el-button v-else @click="handleLogout" text>退出</el-button>
                 </div>
             </div>
+            <!-- 通知面板（条件显示） -->
+            <NotificationPanel v-if="showNotificationPanel" @close="showNotificationPanel = false" />
         </div>
 
         <!-- 筛选栏 -->
@@ -124,22 +134,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { Search, Star, ChatDotRound, View, Plus } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/userStore'
 import { usePostStore } from '@/stores/postStore'
+import { useNotificationStore } from '@/stores/notificationStore'
+import { wsService } from '@/services/websocket'
+import { Bell } from '@element-plus/icons-vue'
+import NotificationPanel from '@/components/NotificationPanel.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
 const postStore = usePostStore()
+const notificationStore = useNotificationStore()
 
 // 本地搜索关键词
 const searchKeyword = ref('')
 const handleSearch = () => {
     postStore.setSearch(searchKeyword.value)
 }
+
+
+const showNotificationPanel = ref(false)
+const bellRef = ref<HTMLElement | null>(null)
+
 
 // 标签选项
 const tagOptions = [
@@ -192,13 +212,6 @@ const submitPost = async () => {
     }
 }
 
-// 退出登录
-const handleLogout = async () => {
-    await ElMessageBox.confirm('确定要退出登录吗？', '提示', { type: 'warning' })
-    userStore.logout()
-    router.push('/auth')
-}
-
 // 时间格式化
 const formatTime = (iso: string) => {
     // 后端存储的是 UTC 时间，加 Z 后缀让浏览器正确转换为本地时区
@@ -226,14 +239,89 @@ const goToProfile = () => {
     }
 }
 
-onMounted(async () => {
-    if (userStore.isLoggedIn) {
-        await postStore.fetchPosts()
+// 点击铃铛切换面板
+const toggleNotificationPanel = () => {
+    showNotificationPanel.value = !showNotificationPanel.value
+}
+
+// 点击外部关闭面板
+const handleClickOutside = (event: MouseEvent) => {
+    if (showNotificationPanel.value && bellRef.value && !bellRef.value.contains(event.target as Node)) {
+        const panel = document.querySelector('.notification-panel')
+        if (panel && !panel.contains(event.target as Node)) {
+            showNotificationPanel.value = false
+        }
+    }
+}
+
+// WebSocket 消息处理
+const handleWebSocketMessage = (data: any) => {
+    // 根据后端约定的消息结构解析
+    // 示例结构：{ type: 'comment', data: { id, postId, author, content, ... } }
+    if (data.type === 'comment' || data.type === 'like' || data.type === 'follow') {
+        const notif = {
+            id: data.data.id || Date.now(),
+            type: data.type,
+            content: data.data.message || `${data.data.author} ${data.type === 'comment' ? '评论了你的帖子' : data.type === 'like' ? '点赞了你的帖子' : '关注了你'}`,
+            targetId: data.data.postId || null,
+            createdAt: new Date().toISOString(),
+            read: false,
+        }
+        notificationStore.addNotification(notif)
+        // 可选：显示一个短暂的消息提示
+        ElMessage.info({ message: notif.content, duration: 3000 })
+    }
+}
+
+// 登录后建立 WebSocket 连接
+const initWebSocket = () => {
+    const token = localStorage.getItem('access_token')
+    if (token && userStore.isLoggedIn) {
+        wsService.connect(token)
+    }
+}
+
+// 登出时断开 WebSocket
+const handleLogout = async () => {
+    await userStore.logout()
+    wsService.disconnect()
+    router.push('/auth')
+}
+
+// 监听用户登录状态变化
+watch(() => userStore.isLoggedIn, (isLoggedIn) => {
+    if (isLoggedIn) {
+        initWebSocket()
     } else {
+        wsService.disconnect()
+    }
+})
+
+
+onMounted(async () => {
+    // 初始化通知未读数
+    notificationStore.fetchUnreadCount()
+    // 如果已登录，建立 WebSocket
+    if (userStore.isLoggedIn) {
+        initWebSocket()
         // 未登录也可查看列表
         await postStore.fetchPosts()
     }
+    // 注册 WebSocket 消息监听
+    const unsub = wsService.onMessage(handleWebSocketMessage)
+    // 页面关闭时清理（可选）
+    onUnmounted(() => {
+        unsub()
+        wsService.disconnect()
+    })
+    // 监听点击外部关闭面板
+    document.addEventListener('click', handleClickOutside)
 })
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside)
+})
+
 </script>
 
 <style scoped lang="scss">
