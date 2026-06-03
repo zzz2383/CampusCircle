@@ -10,6 +10,8 @@ const router = createRouter({
         { path: '/rank', name: 'rank', component: () => import('@/views/Rank.vue') },
         { path: '/profile', name: 'profile', component: () => import('@/views/Profile.vue') },
         { path: '/lost-items', name: 'lostItems', component: () => import('@/views/LostItem.vue') },
+        { path: '/clubs/:id', name: 'clubDetail', component: () => import('@/views/ClubDetail.vue') },
+        { path: '/clubs', name: 'clubs', component: () => import('@/views/ClubList.vue') },
     ],
 })
 

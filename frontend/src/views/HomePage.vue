@@ -6,6 +6,11 @@
             <div class="nav-links">
                 <el-button link @click="router.push('/rank')">排行榜</el-button>
                 <el-button link @click="router.push('/lost-items')">失物招领</el-button>
+                <el-form-item label="关联社团（可选）">
+                    <el-select v-model="postForm.clubId" placeholder="选择社团" clearable style="width: 100%">
+                        <el-option v-for="club in clubs" :key="club.id" :label="club.name" :value="club.id" />
+                    </el-select>
+                </el-form-item>
                 <!-- 通知铃铛 -->
                 <div class="notification-bell" @click="toggleNotificationPanel" ref="bellRef">
                     <el-badge :value="notificationStore.unreadCount" :hidden="notificationStore.unreadCount === 0">
@@ -145,6 +150,7 @@ import { useNotificationStore } from '@/stores/notificationStore'
 import { wsService } from '@/services/websocket'
 import { Bell } from '@element-plus/icons-vue'
 import NotificationPanel from '@/components/NotificationPanel.vue'
+import { getClubs } from '@/services/club'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -174,6 +180,7 @@ const tagOptions = [
     { label: '失物招领', value: '失物招领' },
 ]
 
+const clubs = ref<any[]>([])
 
 // 发帖对话框
 const dialogVisible = ref(false)
@@ -182,6 +189,7 @@ const postForm = ref({
     title: '',
     content: '',
     tagsArray: [] as string[],
+    clubId: null as number | null,
 })
 const commonTags = ['课程', '社团', '求助', '失物招领', '生活', '吐槽']
 
@@ -192,7 +200,7 @@ const openPostDialog = () => {
         return
     }
     dialogVisible.value = true
-    postForm.value = { title: '', content: '', tagsArray: [] }
+    postForm.value = { title: '', content: '', tagsArray: [], clubId: null }
 }
 
 const submitPost = async () => {
@@ -306,6 +314,7 @@ onMounted(async () => {
     // 如果已登录，建立 WebSocket
     if (userStore.isLoggedIn) {
         initWebSocket()
+        clubs.value = await getClubs()
     }
 
     // 无论是否登录，都获取帖子列表（原逻辑将 fetchPosts 放在 if 内部，修正）

@@ -53,6 +53,8 @@ export interface PostDTO {
     is_liked: boolean
     created_at: string
     updated_at: string
+    club_id?: number | null
+    club_name?: string | null
 }
 
 export interface PostListResponse {
@@ -92,6 +94,7 @@ export interface CreatePostPayload {
     title: string
     content: string
     tags?: string   // 逗号分隔的标签字符串
+    club_id?: number | null
 }
 
 export interface LikeResponse {
@@ -144,4 +147,41 @@ export interface LostItemListResponse {
     total: number
     offset: number
     limit: number
+}
+
+// 社团相关类型
+export interface Club {
+    id: number
+    name: string
+    description: string | null
+    logo_url: string | null
+    created_at: string
+    member_count?: number  // 前端计算或后端返回
+}
+
+export interface ClubMember {
+    id: number
+    user_id: number
+    club_id: number
+    role: 'member' | 'admin' | 'founder'
+    joined_at: string
+    user_nickname: string
+}
+
+export interface CreateClubPayload {
+    name: string
+    description?: string
+}
+
+export interface EventDTO {
+    id: number
+    title: string
+    description: string
+    location: string | null
+    max_participants: number | null
+    start_time: string
+    end_time: string
+    club_id?: number | null
+    club_name?: string | null
+    created_at: string
 }
