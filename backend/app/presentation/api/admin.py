@@ -139,7 +139,7 @@ async def admin_unban_user(
 
 # ========== 数据统计 ==========
 
-@router.get("/stats")
+@router.get("/stats/posts-trend")
 async def admin_get_post_trend(
     days: int = Query(7, ge=1, le=30, description="近几天"),
     _admin: UserDTO = Depends(get_current_admin_user),
