@@ -316,13 +316,13 @@ const submitReply = async (parentId: number) => {
 const renderMarkdown = (text: string): string => {
     if (!text) return ''
     let html = text
-        .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
         .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:8px;margin:8px 0" />')
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/
-/g, '<br>')
+        .replace(/\n/g, '<br>')   // 确保这一行没有换行
     return html
 }
 
@@ -350,7 +350,7 @@ onMounted(async () => {
     await fetchPost()
     if (post.value) {
         // 增加浏览量（不阻塞页面渲染）
-        fetch(`/api/posts/${post.value.id}/view`, { method: 'POST' }).catch(() => {})
+        fetch(`/api/posts/${post.value.id}/view`, { method: 'POST' }).catch(() => { })
         await fetchComments()
     }
 })

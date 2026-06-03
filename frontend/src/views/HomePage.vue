@@ -67,9 +67,14 @@
                         </div>
                     </div>
                 </div>
+                <!-- 图片预览（如果有） -->
+                <div v-if="extractFirstImage(post.content)" class="post-image">
+                    <img :src="extractFirstImage(post.content)" alt="预览图" loading="lazy" />
+                </div>
+                <div class="card-header">...</div>
                 <!-- 标题改为普通 div，不再使用 router-link -->
                 <div class="post-title">{{ post.title }}</div>
-                <div class="post-content">{{ post.content }}</div>
+                <div class="post-content">{{ removeImageMarkdown(post.content) }}</div>
                 <div class="tags" v-if="post.tags">
                     <el-tag v-for="t in post.tags.split(',')" :key="t" size="small" effect="plain">
                         {{ t.trim() }}
@@ -330,6 +335,20 @@ const handleLogout = async () => {
     router.push('/auth')
 }
 
+// 提取 Markdown 内容中的第一张图片 URL
+const extractFirstImage = (content: string): string | undefined => {
+    if (!content) return undefined
+    const match = content.match(/!\[.*?\]\((.*?)\)/)
+    return match ? match[1] : undefined
+}
+
+// 从 Markdown 内容中移除图片标记，保留纯文本
+const removeImageMarkdown = (content: string): string => {
+    if (!content) return ''
+    // 移除 ![...](...) 格式的图片标记
+    return content.replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+}
+
 // 监听用户登录状态变化
 watch(() => userStore.isLoggedIn, (isLoggedIn) => {
     if (isLoggedIn) {
@@ -586,5 +605,24 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 1rem;
+}
+
+.post-image {
+    margin-bottom: 0.75rem;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: #f5f5f5;
+
+    img {
+        width: 100%;
+        max-height: 200px;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.2s ease;
+    }
+
+    &:hover img {
+        transform: scale(1.02);
+    }
 }
 </style>
