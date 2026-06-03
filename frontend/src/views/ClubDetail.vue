@@ -31,8 +31,32 @@
                 <div class="action-buttons">
                     <el-button v-if="!store.isMember" type="primary" @click="handleJoin">加入社团</el-button>
                     <el-button v-else type="danger" plain @click="handleLeave">退出社团</el-button>
+                    <el-button v-if="store.isMember" type="success" plain @click="openPostDialog">发布帖子</el-button>
                 </div>
             </div>
+
+            <!-- 发帖对话框 -->
+            <el-dialog v-model="postDialogVisible" title="发布帖子" width="550px" destroy-on-close>
+                <el-form :model="postForm" label-position="top">
+                    <el-form-item label="标题" required>
+                        <el-input v-model="postForm.title" placeholder="给帖子一个醒目的标题" maxlength="100" show-word-limit />
+                    </el-form-item>
+                    <el-form-item label="内容" required>
+                        <el-input type="textarea" v-model="postForm.content" rows="6" placeholder="分享你的校园生活..."
+                            maxlength="2000" show-word-limit />
+                    </el-form-item>
+                    <el-form-item label="话题标签（可选，多个用逗号分隔）">
+                        <el-select v-model="postForm.tagsArray" multiple filterable allow-create default-first-option
+                            placeholder="选择或创建标签" style="width: 100%">
+                            <el-option v-for="item in commonTags" :key="item" :label="item" :value="item" />
+                        </el-select>
+                    </el-form-item>
+                </el-form>
+                <template #footer>
+                    <el-button @click="postDialogVisible = false">取消</el-button>
+                    <el-button type="primary" @click="submitClubPost" :loading="postSubmitting">发布</el-button>
+                </template>
+            </el-dialog>
 
             <!-- Tab 切换：成员、帖子、活动 -->
             <el-tabs v-model="activeTab" class="detail-tabs">
@@ -92,6 +116,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, User, Calendar, Location, Clock } from '@element-plus/icons-vue'
 import { useClubStore } from '@/stores/clubStore'
 import { useUserStore } from '@/stores/userStore'
+import { createPost } from '@/services/post'
 
 const route = useRoute()
 const router = useRouter()
@@ -100,6 +125,49 @@ const userStore = useUserStore()
 
 const clubId = Number(route.params.id)
 const activeTab = ref('members')
+
+const postDialogVisible = ref(false)
+const postSubmitting = ref(false)
+const postForm = ref({
+    title: '',
+    content: '',
+    tagsArray: [] as string[],
+})
+const commonTags = ['课程', '社团', '求助', '失物招领', '生活', '吐槽']
+
+const openPostDialog = () => {
+    if (!userStore.isLoggedIn) {
+        ElMessage.warning('请先登录')
+        router.push('/auth')
+        return
+    }
+    postForm.value = { title: '', content: '', tagsArray: [] }
+    postDialogVisible.value = true
+}
+
+const submitClubPost = async () => {
+    if (!postForm.value.title.trim() || !postForm.value.content.trim()) {
+        ElMessage.warning('请填写标题和内容')
+        return
+    }
+    postSubmitting.value = true
+    try {
+        await createPost({
+            title: postForm.value.title.trim(),
+            content: postForm.value.content.trim(),
+            tags: postForm.value.tagsArray.join(','),
+            club_id: clubId,  // 关键：关联当前社团
+        })
+        ElMessage.success('发布成功')
+        postDialogVisible.value = false
+        // 刷新社团帖子列表
+        await store.fetchClubDetail(clubId)
+    } catch (error) {
+        ElMessage.error('发布失败')
+    } finally {
+        postSubmitting.value = false
+    }
+}
 
 const handleJoin = async () => {
     if (!userStore.isLoggedIn) {
