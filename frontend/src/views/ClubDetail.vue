@@ -32,12 +32,13 @@
                     <el-button v-if="!store.isMember" type="primary" @click="handleJoin">加入社团</el-button>
                     <el-button v-else type="danger" plain @click="handleLeave">退出社团</el-button>
                     <el-button v-if="store.isMember" type="success" plain @click="openPostDialog">发布帖子</el-button>
+                    <el-button v-if="store.isMember" type="warning" plain @click="openEventDialog">创建活动</el-button>
                 </div>
             </div>
 
-            <!-- 发帖对话框 -->
-            <el-dialog v-model="postDialogVisible" title="发布帖子" width="550px" destroy-on-close>
-                <el-form :model="postForm" label-position="top">
+            <!-- 发帖对话框（美化版） -->
+            <el-dialog v-model="postDialogVisible" title="发布帖子" width="580px" destroy-on-close class="beauty-dialog">
+                <el-form :model="postForm" label-position="top" size="default">
                     <el-form-item label="标题" required>
                         <el-input v-model="postForm.title" placeholder="给帖子一个醒目的标题" maxlength="100" show-word-limit />
                     </el-form-item>
@@ -50,11 +51,44 @@
                             placeholder="选择或创建标签" style="width: 100%">
                             <el-option v-for="item in commonTags" :key="item" :label="item" :value="item" />
                         </el-select>
+                        <div class="form-hint">例如: 课程,求助,生活,吐槽</div>
                     </el-form-item>
                 </el-form>
                 <template #footer>
                     <el-button @click="postDialogVisible = false">取消</el-button>
                     <el-button type="primary" @click="submitClubPost" :loading="postSubmitting">发布</el-button>
+                </template>
+            </el-dialog>
+
+            <!-- 创建活动对话框 -->
+            <el-dialog v-model="eventDialogVisible" title="创建活动" width="580px" destroy-on-close class="beauty-dialog">
+                <el-form :model="eventForm" label-position="top" size="default">
+                    <el-form-item label="活动标题" required>
+                        <el-input v-model="eventForm.title" placeholder="例：AI 技术沙龙" maxlength="200" show-word-limit />
+                    </el-form-item>
+                    <el-form-item label="活动描述" required>
+                        <el-input type="textarea" v-model="eventForm.description" rows="3" placeholder="详细介绍活动内容、流程等"
+                            maxlength="1000" show-word-limit />
+                    </el-form-item>
+                    <el-form-item label="地点">
+                        <el-input v-model="eventForm.location" placeholder="教学楼A101" />
+                    </el-form-item>
+                    <el-form-item label="人数上限">
+                        <el-input-number v-model="eventForm.max_participants" :min="1" :max="999" placeholder="不限"
+                            style="width:100%" />
+                    </el-form-item>
+                    <el-form-item label="开始时间" required>
+                        <el-date-picker v-model="eventForm.start_time" type="datetime" placeholder="选择开始时间"
+                            style="width:100%" value-format="YYYY-MM-DDTHH:mm:ssZ" />
+                    </el-form-item>
+                    <el-form-item label="结束时间" required>
+                        <el-date-picker v-model="eventForm.end_time" type="datetime" placeholder="选择结束时间"
+                            style="width:100%" value-format="YYYY-MM-DDTHH:mm:ssZ" />
+                    </el-form-item>
+                </el-form>
+                <template #footer>
+                    <el-button @click="eventDialogVisible = false">取消</el-button>
+                    <el-button type="primary" @click="submitClubEvent" :loading="eventSubmitting">创建</el-button>
                 </template>
             </el-dialog>
 
@@ -67,7 +101,8 @@
                             <el-avatar :size="32">{{ member.user_nickname.charAt(0) }}</el-avatar>
                             <span class="member-name">{{ member.user_nickname }}</span>
                             <span class="member-role">{{ member.role === 'founder' ? '创始人' : member.role === 'admin' ?
-                                '管理员' : '成员' }}</span>
+                                '管理员' : '成员'
+                            }}</span>
                             <span class="member-time">{{ formatDate(member.joined_at) }}</span>
                         </div>
                     </div>
@@ -78,19 +113,17 @@
                     <div v-else>
                         <div v-for="post in store.posts" :key="post.id" class="post-item" @click="goToPost(post.id)">
                             <div class="post-title">{{ post.title }}</div>
-                            <div class="post-meta">
-                                {{ post.author_nickname }} · {{ formatTime(post.created_at) }} · {{ post.like_count }}
-                                点赞
-                            </div>
+                            <div class="post-meta">{{ post.author_nickname }} · {{ formatTime(post.created_at) }} · {{
+                                post.like_count }} 点赞</div>
                         </div>
-                        <!-- 分页加载更多（暂简化） -->
                     </div>
                 </el-tab-pane>
 
                 <el-tab-pane label="社团活动" name="events">
                     <div v-if="store.events.length === 0" class="empty-tab">暂无活动</div>
                     <div v-else>
-                        <div v-for="event in store.events" :key="event.id" class="event-item">
+                        <div v-for="event in store.events" :key="event.id" class="event-item"
+                            @click="goToEvent(event.id)">
                             <div class="event-title">{{ event.title }}</div>
                             <div class="event-desc">{{ event.description }}</div>
                             <div class="event-meta">
@@ -117,6 +150,7 @@ import { ArrowLeft, User, Calendar, Location, Clock } from '@element-plus/icons-
 import { useClubStore } from '@/stores/clubStore'
 import { useUserStore } from '@/stores/userStore'
 import { createPost } from '@/services/post'
+import { createEvent } from '@/services/event'
 
 const route = useRoute()
 const router = useRouter()
@@ -126,6 +160,7 @@ const userStore = useUserStore()
 const clubId = Number(route.params.id)
 const activeTab = ref('members')
 
+// 发帖相关
 const postDialogVisible = ref(false)
 const postSubmitting = ref(false)
 const postForm = ref({
@@ -133,7 +168,19 @@ const postForm = ref({
     content: '',
     tagsArray: [] as string[],
 })
-const commonTags = ['课程', '社团', '求助', '失物招领', '生活', '吐槽']
+const commonTags = ['课程', '求助', '生活', '吐槽']   // 移除社团、失物招领
+
+// 活动相关
+const eventDialogVisible = ref(false)
+const eventSubmitting = ref(false)
+const eventForm = ref({
+    title: '',
+    description: '',
+    location: '',
+    max_participants: null as number | null,
+    start_time: '',
+    end_time: '',
+})
 
 const openPostDialog = () => {
     if (!userStore.isLoggedIn) {
@@ -156,16 +203,57 @@ const submitClubPost = async () => {
             title: postForm.value.title.trim(),
             content: postForm.value.content.trim(),
             tags: postForm.value.tagsArray.join(','),
-            club_id: clubId,  // 关键：关联当前社团
+            club_id: clubId,
         })
         ElMessage.success('发布成功')
         postDialogVisible.value = false
-        // 刷新社团帖子列表
-        await store.fetchClubDetail(clubId)
+        await store.fetchClubDetail(clubId) // 刷新帖子列表
     } catch (error) {
         ElMessage.error('发布失败')
     } finally {
         postSubmitting.value = false
+    }
+}
+
+const openEventDialog = () => {
+    if (!userStore.isLoggedIn) {
+        ElMessage.warning('请先登录')
+        router.push('/auth')
+        return
+    }
+    eventForm.value = {
+        title: '',
+        description: '',
+        location: '',
+        max_participants: null,
+        start_time: '',
+        end_time: '',
+    }
+    eventDialogVisible.value = true
+}
+
+const submitClubEvent = async () => {
+    if (!eventForm.value.title.trim() || !eventForm.value.description.trim()) {
+        ElMessage.warning('请填写活动标题和描述')
+        return
+    }
+    if (!eventForm.value.start_time || !eventForm.value.end_time) {
+        ElMessage.warning('请选择起止时间')
+        return
+    }
+    eventSubmitting.value = true
+    try {
+        await createEvent({
+            ...eventForm.value,
+            club_id: clubId, // 自动关联当前社团
+        })
+        ElMessage.success('活动创建成功')
+        eventDialogVisible.value = false
+        await store.fetchClubDetail(clubId) // 刷新活动列表
+    } catch (error) {
+        ElMessage.error('创建失败')
+    } finally {
+        eventSubmitting.value = false
     }
 }
 
@@ -195,6 +283,10 @@ const handleLeave = async () => {
 
 const goToPost = (postId: number) => {
     router.push(`/posts/${postId}`)
+}
+
+const goToEvent = (eventId: number) => {
+    router.push(`/events/${eventId}`)
 }
 
 const formatDate = (dateStr: string) => {
@@ -265,7 +357,10 @@ onMounted(() => {
     }
 
     .action-buttons {
-        text-align: center;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
     }
 }
 
@@ -306,6 +401,11 @@ onMounted(() => {
     padding: 1rem 0;
     border-bottom: 1px solid #eef2f8;
     cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+        background: #f8fafc;
+    }
 
     .post-title,
     .event-title {
@@ -326,5 +426,32 @@ onMounted(() => {
     text-align: center;
     padding: 2rem;
     color: #8a9bb0;
+}
+
+.form-hint {
+    font-size: 0.7rem;
+    color: #8a9bb0;
+    margin-top: 0.25rem;
+}
+
+// 美化对话框（圆角、阴影等）
+:deep(.beauty-dialog .el-dialog) {
+    border-radius: 1.25rem;
+    overflow: hidden;
+}
+
+:deep(.beauty-dialog .el-dialog__header) {
+    border-bottom: 1px solid #eef2f8;
+    padding: 1rem 1.5rem;
+    margin: 0;
+}
+
+:deep(.beauty-dialog .el-dialog__body) {
+    padding: 1.5rem;
+}
+
+:deep(.beauty-dialog .el-dialog__footer) {
+    border-top: 1px solid #eef2f8;
+    padding: 1rem 1.5rem;
 }
 </style>
