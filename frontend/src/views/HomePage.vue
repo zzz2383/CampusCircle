@@ -125,7 +125,7 @@
                         placeholder="选择或创建标签" style="width: 100%">
                         <el-option v-for="item in commonTags" :key="item" :label="item" :value="item" />
                     </el-select>
-                    <div class="form-hint">例如: 课程,社团,求助,失物招领</div>
+                    <div class="form-hint">例如: 课程,求助,生活,吐槽</div>
                 </el-form-item>
             </el-form>
             <template #footer>
@@ -172,9 +172,9 @@ const bellRef = ref<HTMLElement | null>(null)
 const tagOptions = [
     { label: '全部', value: '' },
     { label: '课程', value: '课程' },
-    { label: '社团', value: '社团' },
     { label: '求助', value: '求助' },
-    { label: '失物招领', value: '失物招领' },
+    { label: '生活', value: '生活' },
+    { label: '吐槽', value: '吐槽' },
 ]
 
 const clubs = ref<any[]>([])
@@ -186,9 +186,8 @@ const postForm = ref({
     title: '',
     content: '',
     tagsArray: [] as string[],
-    clubId: null as number | null,
 })
-const commonTags = ['课程', '社团', '求助', '失物招领', '生活', '吐槽']
+const commonTags = ['课程', '求助', '生活', '吐槽']
 
 const openPostDialog = () => {
     if (!userStore.isLoggedIn) {
@@ -197,7 +196,7 @@ const openPostDialog = () => {
         return
     }
     dialogVisible.value = true
-    postForm.value = { title: '', content: '', tagsArray: [], clubId: null }
+    postForm.value = { title: '', content: '', tagsArray: [] }
 }
 
 const submitPost = async () => {
