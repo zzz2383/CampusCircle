@@ -100,6 +100,16 @@ class PostServiceImpl(IPostService):
             items=items, total=len(items), offset=offset, limit=limit,
         )
 
+    async def search_posts(
+        self, keyword: str, offset: int = 0, limit: int = 20
+    ) -> PostListResponse:
+        """搜索帖子"""
+        posts = await self.post_dao.search(keyword=keyword, offset=offset, limit=limit)
+        items = [await self._to_dto(p) for p in posts]
+        return PostListResponse(
+            items=items, total=len(items), offset=offset, limit=limit,
+        )
+
     async def increment_view_count(self, post_id: int) -> int:
         count = await self.post_dao.increment_view_count(post_id)
         await self.db_session.commit()

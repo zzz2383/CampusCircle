@@ -42,9 +42,12 @@ async def list_posts(
     limit: int = Query(20, ge=1, le=100),
     tag: Optional[str] = Query(None, description="按话题标签筛选"),
     club_id: Optional[int] = Query(None, description="按社团筛选"),
+    keyword: Optional[str] = Query(None, description="关键词搜索（匹配标题和正文）"),
     post_service: IPostService = Depends(get_post_service),
 ):
-    """获取帖子列表（支持分页、标签筛选、社团筛选）"""
+    """获取帖子列表（支持分页、标签筛选、社团筛选、关键词搜索）"""
+    if keyword:
+        return await post_service.search_posts(keyword=keyword, offset=offset, limit=limit)
     return await post_service.list_posts(offset=offset, limit=limit, tag=tag, club_id=club_id)
 
 

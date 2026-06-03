@@ -21,6 +21,11 @@ class IPostService(ABC):
     ) -> PostListResponse: ...
 
     @abstractmethod
+    async def search_posts(
+        self, keyword: str, offset: int = 0, limit: int = 20
+    ) -> PostListResponse: ...
+
+    @abstractmethod
     async def increment_view_count(self, post_id: int) -> int: ...
 
     @abstractmethod
