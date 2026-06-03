@@ -92,9 +92,10 @@ def create_app() -> FastAPI:
     app.include_router(lost_items.router)
 
     # WebSocket
-    from fastapi import Query
+    from fastapi import WebSocket
     @app.websocket("/ws")
-    async def ws_endpoint(websocket, token: str = Query(...)):
+    async def ws_endpoint(websocket: WebSocket):
+        token = websocket.query_params.get("token", "")
         await websocket_handler(websocket, token=token)
 
     # 全局异常处理器
