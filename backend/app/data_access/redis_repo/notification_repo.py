@@ -11,7 +11,7 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 
 class INotificationRepository(ABC):
@@ -43,12 +43,12 @@ class INotificationRepository(ABC):
         ...
 
     @abstractmethod
-    async def add_unread(self, user_id: int, notification_id: str) -> int:
-        """添加未读通知（LPUSH）
+    async def add_unread(self, user_id: int, notification: Dict[str, Any]) -> int:
+        """存储未读通知（LPUSH + JSON）
 
         参数：
             user_id: 用户 ID
-            notification_id: 通知 ID
+            notification: 完整的通知字典（含 id, type, content, timestamp 等）
 
         返回值：
             当前未读通知数
@@ -64,5 +64,27 @@ class INotificationRepository(ABC):
 
         返回值：
             未读通知数量
+        """
+        ...
+
+    @abstractmethod
+    async def list_notifications(self, user_id: int, limit: int = 20) -> List[Dict[str, Any]]:
+        """获取未读通知列表（LRANGE）
+
+        参数：
+            user_id: 用户 ID
+            limit: 返回条数
+
+        返回值：
+            通知字典列表
+        """
+        ...
+
+    @abstractmethod
+    async def clear_unread(self, user_id: int) -> None:
+        """清空未读通知列表（DEL）
+
+        参数：
+            user_id: 用户 ID
         """
         ...

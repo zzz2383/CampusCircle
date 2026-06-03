@@ -2,8 +2,10 @@
 功能：通知业务逻辑实现
 
 实现逻辑：
-    1. send_notification: 构建通知 → UUID → PUBLISH → LPUSH
+    1. send_notification: 构建通知 → UUID → PUBLISH → LPUSH（完整 JSON）
     2. get_unread_count: LLEN 获取未读列表长度
+    3. get_notifications: LRANGE 获取未读通知列表
+    4. mark_as_read: DEL 清空未读列表
 
 调用链路：
     - 被 LikeService / CommentService 在事件触发时调用
@@ -11,7 +13,7 @@
 """
 
 import uuid
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from app.business.interfaces.notification_service import INotificationService
 from app.data_access.redis_repo.notification_repo import INotificationRepository
@@ -34,8 +36,8 @@ class NotificationServiceImpl(INotificationService):
         实现逻辑：
             1. 生成唯一通知 ID（UUID）
             2. 构建完整通知消息（含 id + 时间戳）
-            3. 通过 Redis PUBLISH 推送到用户通知频道
-            4. 通过 LPUSH 将通知 ID 存入用户未读列表
+            3. 通过 Redis PUBLISH 推送到用户通知频道（WebSocket 实时推送）
+            4. 通过 LPUSH 将完整通知 JSON 存入用户未读列表
 
         参数：
             user_id: 目标用户 ID
@@ -52,7 +54,7 @@ class NotificationServiceImpl(INotificationService):
 
         channel = f"notification:user:{user_id}"
         subscribers = await self.notification_repo.publish(channel, notification)
-        await self.notification_repo.add_unread(user_id, notification_id)
+        await self.notification_repo.add_unread(user_id, notification)
 
         logger.info(
             f"Notification sent to user #{user_id}: type={data.get('type')}, "
@@ -62,3 +64,11 @@ class NotificationServiceImpl(INotificationService):
     async def get_unread_count(self, user_id: int) -> int:
         """获取未读通知数"""
         return await self.notification_repo.get_unread_count(user_id)
+
+    async def get_notifications(self, user_id: int, limit: int = 20) -> List[Dict[str, Any]]:
+        """获取未读通知列表"""
+        return await self.notification_repo.list_notifications(user_id, limit=limit)
+
+    async def mark_as_read(self, user_id: int) -> None:
+        """标记所有通知为已读（清空未读列表）"""
+        await self.notification_repo.clear_unread(user_id)

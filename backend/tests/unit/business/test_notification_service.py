@@ -2,8 +2,10 @@
 功能：NotificationService 单元测试
 
 测试用例：
-    - test_send_notification: 发送通知 → PUBLISH + LPUSH
+    - test_send_notification: 发送通知 → PUBLISH + LPUSH（完整 JSON）
     - test_get_unread_count: 获取未读数
+    - test_get_notifications: 获取通知列表
+    - test_mark_as_read: 标记已读
 """
 
 import pytest
@@ -39,16 +41,21 @@ async def test_send_notification(service, mock_notification_repo):
         },
     )
 
-    # 验证 publish 调用（传入了序列化后的 JSON 字符串）
+    # 验证 publish 调用
     publish_call = mock_notification_repo.publish.await_args
     assert publish_call is not None
     channel = publish_call[0][0]
     assert channel == "notification:user:2"
 
-    # 验证 add_unread 调用
+    # 验证 add_unread 调用 — 存储的是完整通知字典
     mock_notification_repo.add_unread.assert_awaited_once()
     add_call = mock_notification_repo.add_unread.await_args
     assert add_call[0][0] == 2  # user_id
+    notif_dict = add_call[0][1]  # 通知字典
+    assert isinstance(notif_dict, dict)
+    assert notif_dict["type"] == "like"
+    assert "id" in notif_dict
+    assert "timestamp" in notif_dict
 
 
 @pytest.mark.asyncio
@@ -59,3 +66,26 @@ async def test_get_unread_count(service, mock_notification_repo):
     count = await service.get_unread_count(user_id=1)
     assert count == 5
     mock_notification_repo.get_unread_count.assert_awaited_once_with(1)
+
+
+@pytest.mark.asyncio
+async def test_get_notifications(service, mock_notification_repo):
+    """测试获取通知列表"""
+    expected = [
+        {"id": "n1", "type": "like", "content": "赞"},
+        {"id": "n2", "type": "comment", "content": "评论"},
+    ]
+    mock_notification_repo.list_notifications.return_value = expected
+
+    result = await service.get_notifications(user_id=1, limit=10)
+
+    assert len(result) == 2
+    assert result[0]["type"] == "like"
+    mock_notification_repo.list_notifications.assert_awaited_once_with(1, limit=10)
+
+
+@pytest.mark.asyncio
+async def test_mark_as_read(service, mock_notification_repo):
+    """测试标记已读"""
+    await service.mark_as_read(user_id=1)
+    mock_notification_repo.clear_unread.assert_awaited_once_with(1)

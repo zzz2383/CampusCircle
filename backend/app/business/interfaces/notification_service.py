@@ -41,3 +41,25 @@ class INotificationService(ABC):
     async def get_unread_count(self, user_id: int) -> int:
         """获取未读通知数"""
         ...
+
+    @abstractmethod
+    async def get_notifications(self, user_id: int, limit: int = 20) -> List[Dict[str, Any]]:
+        """获取未读通知列表
+
+        参数：
+            user_id: 用户 ID
+            limit: 返回条数
+
+        返回值：
+            通知字典列表
+        """
+        ...
+
+    @abstractmethod
+    async def mark_as_read(self, user_id: int) -> None:
+        """标记所有通知为已读（清空未读列表）
+
+        参数：
+            user_id: 用户 ID
+        """
+        ...
