@@ -258,6 +258,7 @@ const handleClickOutside = (event: MouseEvent) => {
 const handleWebSocketMessage = (data: any) => {
     // 根据后端约定的消息结构解析
     // 示例结构：{ type: 'comment', data: { id, postId, author, content, ... } }
+    console.log('[WebSocket] 收到原始消息:', data)
     if (data.type === 'comment' || data.type === 'like' || data.type === 'follow') {
         const notif = {
             id: data.data.id || Date.now(),

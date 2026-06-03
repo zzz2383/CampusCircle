@@ -14,7 +14,7 @@
 """
 
 import json
-from typing import Dict, Set
+from typing import Any, Dict, Set
 
 from fastapi import WebSocket, WebSocketDisconnect
 from redis.asyncio import Redis
@@ -69,11 +69,11 @@ async def websocket_handler(websocket: WebSocket, token: str = ""):
         await websocket.close(code=4001, reason="无效的令牌")
         return
 
-    user_id = int(payload.get("sub"))
+    user_id = int(payload.get("sub") or 0)
     await manager.connect(websocket, user_id)
 
     # 尝试连接 Redis 订阅通知
-    redis: Redis = None
+    redis: Redis = Redis.from_url("redis://...")
     pubsub = None
     try:
         from app.infrastructure.redis_client import get_redis
@@ -92,10 +92,10 @@ async def websocket_handler(websocket: WebSocket, token: str = ""):
             redis_task = None
             if pubsub:
                 redis_task = asyncio.create_task(
-                    pubsub.get_message(ignore_subscribe_messages=True, timeout_seconds=30)
+                    pubsub.get_message(ignore_subscribe_messages=True, timeout=30)
                 )
 
-            tasks = [receive_task]
+            tasks: list[asyncio.Task[Any]] = [receive_task]   # 明确列表可以包含任意返回类型的任务
             if redis_task:
                 tasks.append(redis_task)
 
