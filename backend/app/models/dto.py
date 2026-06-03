@@ -191,6 +191,17 @@ class EventCreateRequest(BaseModel):
     end_time: datetime = Field(..., description="结束时间（ISO 格式）")
 
 
+class EventUpdateRequest(BaseModel):
+    """更新活动请求"""
+    title: Optional[str] = Field(None, min_length=1, max_length=200, description="活动标题")
+    description: Optional[str] = Field(None, min_length=1, description="活动描述")
+    location: Optional[str] = Field(None, max_length=200, description="活动地点")
+    max_participants: Optional[int] = Field(None, ge=1, description="最大参与人数")
+    club_id: Optional[int] = Field(None, description="所属社团 ID")
+    start_time: Optional[datetime] = Field(None, description="开始时间（ISO 格式）")
+    end_time: Optional[datetime] = Field(None, description="结束时间（ISO 格式）")
+
+
 class EventDTO(BaseModel):
     """活动信息 DTO"""
     id: int
@@ -199,8 +210,21 @@ class EventDTO(BaseModel):
     location: Optional[str] = None
     max_participants: Optional[int] = None
     club_id: Optional[int] = None
+    participant_count: int = 0
+    is_registered: bool = False
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+class EventParticipantDTO(BaseModel):
+    """活动报名信息 DTO"""
+    id: int
+    user_id: int
+    event_id: int
+    user_nickname: Optional[str] = None
     created_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}

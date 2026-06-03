@@ -30,6 +30,8 @@ from app.data_access.sqlite_dao.post_dao_impl import PostDAOImpl
 from app.data_access.sqlite_dao.club_dao_impl import ClubDAOImpl
 from app.data_access.sqlite_dao.comment_dao_impl import CommentDAOImpl
 from app.data_access.sqlite_dao.event_dao_impl import EventDAOImpl
+from app.data_access.sqlite_dao.event_participant_dao_impl import EventParticipantDAOImpl
+from app.data_access.redis_repo.event_registration_repo_impl import EventRegistrationRepoImpl
 from app.data_access.sqlite_dao.lost_item_dao_impl import LostItemDAOImpl
 from app.data_access.sqlite_dao.club_member_dao_impl import ClubMemberDAOImpl
 from app.data_access.redis_repo.like_repo_impl import LikeRepositoryImpl
@@ -133,10 +135,17 @@ async def get_rank_service(
 
 
 async def get_event_service(
+    redis=Depends(get_redis_client),
     db: AsyncSession = Depends(get_db),
 ) -> IEventService:
     event_dao = EventDAOImpl(db)
-    return EventServiceImpl(event_dao=event_dao, db_session=db)
+    participant_dao = EventParticipantDAOImpl(db)
+    registration_repo = EventRegistrationRepoImpl(redis)
+    return EventServiceImpl(
+        event_dao=event_dao, db_session=db,
+        participant_dao=participant_dao,
+        registration_repo=registration_repo,
+    )
 
 
 async def get_club_service(

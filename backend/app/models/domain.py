@@ -163,6 +163,27 @@ class Event(Base):
     )
 
 
+
+class EventParticipant(Base):
+    """活动报名模型"""
+    __tablename__ = "event_participants"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False, comment="用户 ID"
+    )
+    event_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("events.id"), nullable=False, comment="活动 ID"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), comment="报名时间"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "event_id", name="uq_user_event"),
+    )
+
+
 class LostItem(Base):
     """失物招领模型"""
     __tablename__ = "lost_items"
