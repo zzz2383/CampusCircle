@@ -51,3 +51,8 @@ class IRankService(ABC):
     async def get_club_rank(self, limit: int = 10) -> List[ClubRankDTO]:
         """获取社团活跃榜"""
         ...
+
+    @abstractmethod
+    async def increment_club_score(self, club_id: int, increment: int = 1) -> None:
+        """增加社团活跃度分（由 PostService 在发帖时触发）"""
+        ...

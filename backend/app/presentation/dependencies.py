@@ -100,7 +100,9 @@ async def get_post_service(
     post_dao = PostDAOImpl(db)
     club_dao = ClubDAOImpl(db)
     like_repo = LikeRepositoryImpl(redis) if redis else None
-    return PostServiceImpl(post_dao=post_dao, db_session=db, like_repo=like_repo, club_dao=club_dao)
+    rank_repo = RankRepositoryImpl(redis)
+    rank_service = RankServiceImpl(rank_repo=rank_repo, like_repo=like_repo, post_dao=post_dao, club_dao=club_dao)
+    return PostServiceImpl(post_dao=post_dao, db_session=db, like_repo=like_repo, club_dao=club_dao, rank_service=rank_service)
 
 
 async def get_notification_service(

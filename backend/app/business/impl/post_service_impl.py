@@ -4,6 +4,7 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.business.interfaces.post_service import IPostService
+from app.business.interfaces.rank_service import IRankService
 from app.data_access.sqlite_dao.post_dao import IPostDAO
 from app.data_access.sqlite_dao.club_dao import IClubDAO
 from app.data_access.redis_repo.like_repo import ILikeRepository
@@ -28,11 +29,13 @@ class PostServiceImpl(IPostService):
         db_session: AsyncSession,
         like_repo: Optional[ILikeRepository] = None,
         club_dao: Optional[IClubDAO] = None,
+        rank_service: Optional[IRankService] = None,
     ):
         self.post_dao = post_dao
         self.db_session = db_session
         self.like_repo = like_repo
         self.club_dao = club_dao
+        self.rank_service = rank_service
 
     async def create_post(self, user_id: int, request: PostCreateRequest) -> PostDTO:
         post = Post(
@@ -44,6 +47,10 @@ class PostServiceImpl(IPostService):
         )
         post_id = await self.post_dao.insert(post)
         await self.db_session.commit()
+
+        if request.club_id and self.rank_service:
+            await self.rank_service.increment_club_score(request.club_id, increment=1)
+
         logger.info(f"Post created: id={post_id}, user_id={user_id}")
         created = await self.post_dao.get_by_id(post_id)
         return await self._to_dto(created)

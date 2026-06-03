@@ -114,6 +114,10 @@ class RankServiceImpl(IRankService):
         key = f"{HOT_POSTS_KEY_PREFIX}{tag}"
         await self.rank_repo.increment_score(key, str(post_id), increment)
 
+    async def increment_club_score(self, club_id: int, increment: int = 1) -> None:
+        """增加社团活跃度分"""
+        await self.rank_repo.increment_score(CLUB_RANK_KEY, str(club_id), increment)
+
     async def get_club_rank(self, limit: int = 10) -> List[ClubRankDTO]:
         """
         获取社团活跃榜
