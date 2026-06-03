@@ -6,11 +6,7 @@
             <div class="nav-links">
                 <el-button link @click="router.push('/rank')">排行榜</el-button>
                 <el-button link @click="router.push('/lost-items')">失物招领</el-button>
-                <el-form-item label="关联社团（可选）">
-                    <el-select v-model="postForm.clubId" placeholder="选择社团" clearable style="width: 100%">
-                        <el-option v-for="club in clubs" :key="club.id" :label="club.name" :value="club.id" />
-                    </el-select>
-                </el-form-item>
+                <el-button link @click="router.push('/clubs')">社团</el-button>
                 <!-- 通知铃铛 -->
                 <div class="notification-bell" @click="toggleNotificationPanel" ref="bellRef">
                     <el-badge :value="notificationStore.unreadCount" :hidden="notificationStore.unreadCount === 0">
