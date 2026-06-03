@@ -1,4 +1,5 @@
 """活动相关路由"""
+from typing import Optional
 from fastapi import APIRouter, Depends, Path, Query, status
 from app.business.interfaces import IEventService
 from app.models.dto import EventCreateRequest, EventDTO, UserDTO
@@ -20,9 +21,10 @@ async def create_event(
 async def list_events(
     offset: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
+    club_id: Optional[int] = Query(None, description="按社团筛选"),
     event_service: IEventService = Depends(get_event_service),
 ):
-    return await event_service.list_events(offset=offset, limit=limit)
+    return await event_service.list_events(offset=offset, limit=limit, club_id=club_id)
 
 
 @router.get("/{event_id}", response_model=EventDTO)

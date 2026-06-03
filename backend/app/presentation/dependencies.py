@@ -1,18 +1,4 @@
-"""
-功能：FastAPI 依赖注入集中管理
-
-实现逻辑：
-    1. get_user_service: UserDAOImpl → UserServiceImpl
-    2. get_current_user: JWT 解码 → 查用户 → UserDTO
-    3. get_post_service: PostDAOImpl → PostServiceImpl
-    4. get_redis_client: Redis 异步客户端单例
-    5. get_like_service: LikeRepositoryImpl + RankRepositoryImpl → LikeServiceImpl
-
-调用链路：
-    - 被 presentation/api/*.py 路由通过 Depends() 调用
-    - 调用 infrastructure/db.py / redis_client.py 获取连接
-    - 调用 business/impl 的具体实现类
-"""
+"""FastAPI 依赖注入集中管理"""
 
 from typing import Optional
 
@@ -45,6 +31,7 @@ from app.data_access.sqlite_dao.club_dao_impl import ClubDAOImpl
 from app.data_access.sqlite_dao.comment_dao_impl import CommentDAOImpl
 from app.data_access.sqlite_dao.event_dao_impl import EventDAOImpl
 from app.data_access.sqlite_dao.lost_item_dao_impl import LostItemDAOImpl
+from app.data_access.sqlite_dao.club_member_dao_impl import ClubMemberDAOImpl
 from app.data_access.redis_repo.like_repo_impl import LikeRepositoryImpl
 from app.data_access.redis_repo.rank_repo_impl import RankRepositoryImpl
 from app.data_access.redis_repo.notification_repo_impl import NotificationRepositoryImpl
@@ -58,7 +45,6 @@ security_required = HTTPBearer(auto_error=True)
 
 
 async def get_user_service(db: AsyncSession = Depends(get_db)) -> IUserService:
-    """依赖注入：获取 UserService 实例"""
     user_dao = UserDAOImpl(db)
     return UserServiceImpl(user_dao=user_dao, db_session=db)
 
@@ -67,33 +53,16 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security_required),
     user_service: IUserService = Depends(get_user_service),
 ) -> UserDTO:
-    """依赖注入：获取当前登录用户（JWT 认证）"""
     token = credentials.credentials
     payload = decode_access_token(token)
-
     if payload is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的访问令牌",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    user_id_str: str = payload.get("sub")
+        raise HTTPException(status_code=401, detail="无效的访问令牌", headers={"WWW-Authenticate": "Bearer"})
+    user_id_str = payload.get("sub")
     if user_id_str is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="令牌 payload 无效",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
+        raise HTTPException(status_code=401, detail="令牌 payload 无效", headers={"WWW-Authenticate": "Bearer"})
     user = await user_service.get_user_by_id(int(user_id_str))
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="用户不存在",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
+        raise HTTPException(status_code=401, detail="用户不存在", headers={"WWW-Authenticate": "Bearer"})
     return user
 
 
@@ -101,7 +70,6 @@ async def get_current_user_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     user_service: IUserService = Depends(get_user_service),
 ) -> Optional[UserDTO]:
-    """依赖注入：可选的当前用户（未登录时返回 None）"""
     if credentials is None:
         return None
     payload = decode_access_token(credentials.credentials)
@@ -117,41 +85,25 @@ async def get_current_user_optional(
 
 
 async def get_redis_client():
-    """依赖注入：获取 Redis 异步客户端
-
-    实现逻辑：
-        1. 尝试获取 Redis 连接
-        2. 如果 Redis 不可用，抛出 503 错误（清晰提示而非 500）
-
-    Redis 连接在 main.py lifespan 中初始化，此处获取单例
-    """
     try:
         return await get_redis()
-    except ConnectionError as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Redis 服务不可用，该功能需要 Redis。请执行 docker compose up -d 启动 Redis。",
-        )
+    except ConnectionError:
+        raise HTTPException(status_code=503, detail="Redis 服务不可用")
 
 
 async def get_post_service(
     redis=Depends(get_redis_client),
     db: AsyncSession = Depends(get_db),
 ) -> IPostService:
-    """依赖注入：获取 PostService 实例（含可选 Redis 点赞数据）"""
     post_dao = PostDAOImpl(db)
+    club_dao = ClubDAOImpl(db)
     like_repo = LikeRepositoryImpl(redis) if redis else None
-    return PostServiceImpl(
-        post_dao=post_dao,
-        db_session=db,
-        like_repo=like_repo,
-    )
+    return PostServiceImpl(post_dao=post_dao, db_session=db, like_repo=like_repo, club_dao=club_dao)
 
 
 async def get_notification_service(
     redis=Depends(get_redis_client),
 ) -> INotificationService:
-    """依赖注入：获取 NotificationService 实例"""
     notification_repo = NotificationRepositoryImpl(redis)
     return NotificationServiceImpl(notification_repo=notification_repo)
 
@@ -160,14 +112,11 @@ async def get_like_service(
     redis=Depends(get_redis_client),
     db: AsyncSession = Depends(get_db),
 ) -> ILikeService:
-    """依赖注入：获取 LikeService 实例"""
     like_repo = LikeRepositoryImpl(redis)
     rank_repo = RankRepositoryImpl(redis)
     post_dao = PostDAOImpl(db)
     return LikeServiceImpl(
-        like_repo=like_repo,
-        rank_repo=rank_repo,
-        post_dao=post_dao,
+        like_repo=like_repo, rank_repo=rank_repo, post_dao=post_dao,
         notification_service=await get_notification_service(redis=redis),
     )
 
@@ -176,23 +125,11 @@ async def get_rank_service(
     redis=Depends(get_redis_client),
     db: AsyncSession = Depends(get_db),
 ) -> IRankService:
-    """依赖注入：获取 RankService 实例
-
-    实现逻辑：
-        1. 创建 Redis Repository 实例
-        2. 创建 SQLite DAO 实例
-        3. 创建 RankServiceImpl（注入所有依赖）
-    """
     rank_repo = RankRepositoryImpl(redis)
     like_repo = LikeRepositoryImpl(redis)
     post_dao = PostDAOImpl(db)
     club_dao = ClubDAOImpl(db)
-    return RankServiceImpl(
-        rank_repo=rank_repo,
-        like_repo=like_repo,
-        post_dao=post_dao,
-        club_dao=club_dao,
-    )
+    return RankServiceImpl(rank_repo=rank_repo, like_repo=like_repo, post_dao=post_dao, club_dao=club_dao)
 
 
 async def get_event_service(
@@ -205,41 +142,27 @@ async def get_event_service(
 async def get_club_service(
     db: AsyncSession = Depends(get_db),
 ) -> IClubService:
-    """依赖注入：获取 ClubService 实例"""
     club_dao = ClubDAOImpl(db)
-    return ClubServiceImpl(club_dao=club_dao, db_session=db)
+    club_member_dao = ClubMemberDAOImpl(db)
+    return ClubServiceImpl(club_dao=club_dao, db_session=db, club_member_dao=club_member_dao)
 
 
 async def get_lost_item_service(
     redis=Depends(get_redis_client),
     db: AsyncSession = Depends(get_db),
 ) -> ILostItemService:
-    """依赖注入：获取 LostItemService 实例
-
-    实现逻辑：
-        1. 创建 SQLite DAO 实例
-        2. 创建 Redis Repository 实例（SETEX 自动过期）
-        3. 创建 LostItemServiceImpl（注入所有依赖）
-    """
     dao = LostItemDAOImpl(db)
     repo = LostItemRepositoryImpl(redis)
-    return LostItemServiceImpl(
-        lost_item_dao=dao,
-        lost_item_repo=repo,
-        db_session=db,
-    )
+    return LostItemServiceImpl(lost_item_dao=dao, lost_item_repo=repo, db_session=db)
 
 
 async def get_comment_service(
     redis=Depends(get_redis_client),
     db: AsyncSession = Depends(get_db),
 ) -> ICommentService:
-    """依赖注入：获取 CommentService 实例"""
     comment_dao = CommentDAOImpl(db)
     post_dao = PostDAOImpl(db)
     return CommentServiceImpl(
-        comment_dao=comment_dao,
-        post_dao=post_dao,
-        db_session=db,
+        comment_dao=comment_dao, post_dao=post_dao, db_session=db,
         notification_service=await get_notification_service(redis=redis),
     )

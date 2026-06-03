@@ -56,14 +56,16 @@ class IPostDAO(ABC):
 
     @abstractmethod
     async def list_latest(
-        self, offset: int = 0, limit: int = 20, tag: Optional[str] = None
+        self, offset: int = 0, limit: int = 20, tag: Optional[str] = None,
+        club_id: Optional[int] = None,
     ) -> List[Post]:
-        """获取最新帖子列表（支持按标签筛选）
+        """获取最新帖子列表（支持按标签/社团筛选）
 
         参数：
             offset: 分页偏移量
             limit: 每页数量（默认 20）
             tag: 可选的话题标签筛选
+            club_id: 可选的社团 ID 筛选
 
         返回值：
             Post ORM 对象列表

@@ -14,7 +14,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import String, Text, Boolean, DateTime, Integer, ForeignKey, Enum as SAEnum
+from sqlalchemy import String, Text, Boolean, DateTime, Integer, ForeignKey, UniqueConstraint, Enum as SAEnum
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -72,6 +72,9 @@ class Post(Base):
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, comment="是否可见（软删除）")
     view_count: Mapped[int] = mapped_column(Integer, default=0, comment="浏览数")
+    club_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("clubs.id"), nullable=True, comment="所属社团 ID"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), comment="创建时间"
     )
@@ -120,11 +123,35 @@ class Club(Base):
     )
 
 
+class ClubMember(Base):
+    """社团成员模型"""
+    __tablename__ = "club_members"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False, comment="用户 ID"
+    )
+    club_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("clubs.id"), nullable=False, comment="社团 ID"
+    )
+    role: Mapped[str] = mapped_column(String(20), default="member", comment="角色: member/admin")
+    joined_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), comment="加入时间"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "club_id", name="uq_user_club"),
+    )
+
+
 class Event(Base):
     """活动模型（社团活动、讲座等）"""
     __tablename__ = "events"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    club_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("clubs.id"), nullable=True, comment="所属社团 ID"
+    )
     title: Mapped[str] = mapped_column(String(200), nullable=False, comment="活动标题")
     description: Mapped[str] = mapped_column(Text, nullable=False, comment="活动描述")
     location: Mapped[Optional[str]] = mapped_column(String(200), nullable=True, comment="活动地点")

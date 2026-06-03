@@ -20,7 +20,9 @@ class EventDAOImpl(IEventDAO):
             select(Event).where(Event.id == event_id))
         return result.scalar_one_or_none()
 
-    async def list_events(self, offset: int = 0, limit: int = 20) -> List[Event]:
-        result = await self.session.execute(
-            select(Event).order_by(Event.created_at.desc()).offset(offset).limit(limit))
+    async def list_events(self, offset: int = 0, limit: int = 20, club_id: Optional[int] = None) -> List[Event]:
+        query = select(Event).order_by(Event.created_at.desc())
+        if club_id is not None:
+            query = query.where(Event.club_id == club_id)
+        result = await self.session.execute(query.offset(offset).limit(limit))
         return result.scalars().all()

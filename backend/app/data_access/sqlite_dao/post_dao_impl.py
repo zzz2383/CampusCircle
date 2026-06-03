@@ -91,20 +91,23 @@ class PostDAOImpl(IPostDAO):
         return result.rowcount > 0
 
     async def list_latest(
-        self, offset: int = 0, limit: int = 20, tag: Optional[str] = None
+        self, offset: int = 0, limit: int = 20, tag: Optional[str] = None,
+        club_id: Optional[int] = None,
     ) -> List[Post]:
-        """获取最新帖子列表（支持按标签筛选）
+        """获取最新帖子列表（支持按标签/社团筛选）
 
         实现逻辑：
             1. 如果提供了 tag，使用 LIKE %tag% 筛选
-            2. 按 created_at 降序排列
-            3. 使用 joinedload 预加载作者信息
-            4. 只返回未软删除的帖子
+            2. 如果提供了 club_id，按社团筛选
+            3. 按 created_at 降序排列
+            4. 使用 joinedload 预加载作者信息
+            5. 只返回未软删除的帖子
 
         参数：
             offset: 分页偏移量
             limit: 每页数量（默认 20）
             tag: 可选的话题标签筛选
+            club_id: 可选的社团 ID 筛选
 
         返回值：
             Post ORM 对象列表
@@ -120,6 +123,8 @@ class PostDAOImpl(IPostDAO):
 
         if tag:
             query = query.where(Post.tags.like(f"%{tag}%"))
+        if club_id is not None:
+            query = query.where(Post.club_id == club_id)
 
         result = await self.session.execute(query)
         return result.unique().scalars().all()

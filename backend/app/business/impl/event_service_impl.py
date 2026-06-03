@@ -21,6 +21,7 @@ class EventServiceImpl(IEventService):
             description=request.description,
             location=request.location,
             max_participants=request.max_participants,
+            club_id=request.club_id,
             start_time=request.start_time,
             end_time=request.end_time,
         )
@@ -34,6 +35,6 @@ class EventServiceImpl(IEventService):
         event = await self.event_dao.get_by_id(event_id)
         return EventDTO.model_validate(event) if event else None
 
-    async def list_events(self, offset: int = 0, limit: int = 20) -> List[EventDTO]:
-        events = await self.event_dao.list_events(offset=offset, limit=limit)
+    async def list_events(self, offset: int = 0, limit: int = 20, club_id: Optional[int] = None) -> List[EventDTO]:
+        events = await self.event_dao.list_events(offset=offset, limit=limit, club_id=club_id)
         return [EventDTO.model_validate(e) for e in events]

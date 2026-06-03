@@ -74,6 +74,7 @@ class PostCreateRequest(BaseModel):
     title: str = Field(..., min_length=1, max_length=200, description="标题")
     content: str = Field(..., min_length=1, description="正文内容")
     tags: Optional[str] = Field(None, max_length=200, description="话题标签（逗号分隔）")
+    club_id: Optional[int] = Field(None, description="所属社团 ID")
 
 
 class PostUpdateRequest(BaseModel):
@@ -90,6 +91,8 @@ class PostDTO(BaseModel):
     title: str
     content: str
     tags: Optional[str] = None
+    club_id: Optional[int] = None
+    club_name: Optional[str] = None
     author_nickname: Optional[str] = None
     like_count: int = 0
     comment_count: int = 0
@@ -163,6 +166,18 @@ class ClubDTO(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ClubMemberDTO(BaseModel):
+    """社团成员 DTO"""
+    id: int
+    user_id: int
+    club_id: int
+    role: str = "member"
+    joined_at: Optional[datetime] = None
+    user_nickname: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
 # ========== 活动相关 ==========
 
 class EventCreateRequest(BaseModel):
@@ -171,6 +186,7 @@ class EventCreateRequest(BaseModel):
     description: str = Field(..., min_length=1, description="活动描述")
     location: Optional[str] = Field(None, max_length=200, description="活动地点")
     max_participants: Optional[int] = Field(None, ge=1, description="最大参与人数")
+    club_id: Optional[int] = Field(None, description="所属社团 ID")
     start_time: datetime = Field(..., description="开始时间（ISO 格式）")
     end_time: datetime = Field(..., description="结束时间（ISO 格式）")
 
@@ -182,6 +198,7 @@ class EventDTO(BaseModel):
     description: str
     location: Optional[str] = None
     max_participants: Optional[int] = None
+    club_id: Optional[int] = None
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     created_at: Optional[datetime] = None
