@@ -211,9 +211,12 @@ const submitPublish = async () => {
             description: publishForm.value.description.trim(),
             location: publishForm.value.location.trim() || undefined,
             contact: publishForm.value.contact.trim() || undefined,
+            image_url: publishForm.value.image_url || undefined,   // 新增此行
         })
         ElMessage.success('发布成功')
         publishVisible.value = false
+        // 刷新列表（可选）
+        await store.fetchItems(true)
     } catch (error) {
         ElMessage.error('发布失败')
     } finally {

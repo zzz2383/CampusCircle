@@ -142,6 +142,7 @@ export interface CreateLostItemPayload {
     location?: string
     contact?: string
     is_lost: boolean
+    image_url?: string | null   // 新增此行
 }
 
 export interface LostItemListResponse {
