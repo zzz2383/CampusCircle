@@ -259,6 +259,7 @@ class LostItemCreateRequest(BaseModel):
     """发布失物/拾物请求"""
     title: str = Field(..., min_length=1, max_length=200, description="标题")
     description: str = Field(..., min_length=1, description="物品描述")
+    image_url: Optional[str] = Field(None, max_length=256, description="物品图片 URL")
     location: Optional[str] = Field(None, max_length=200, description="丢失/拾到地点")
     contact: Optional[str] = Field(None, max_length=100, description="联系方式")
     is_lost: bool = Field(True, description="True=丢失, False=拾到")
@@ -270,6 +271,7 @@ class LostItemDTO(BaseModel):
     user_id: int
     title: str
     description: str
+    image_url: Optional[str] = None
     location: Optional[str] = None
     contact: Optional[str] = None
     is_found: bool = False

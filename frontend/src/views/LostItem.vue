@@ -34,6 +34,7 @@
                     <span v-if="item.is_expired" class="status-badge expired">已过期</span>
                     <span v-else-if="item.is_found" class="status-badge found">已找回</span>
                 </div>
+                <img v-if="item.image_url" :src="item.image_url" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
                 <div class="item-title">{{ item.title }}</div>
                 <div class="item-meta">
                     <span><el-icon>
@@ -72,6 +73,17 @@
                     <el-input type="textarea" v-model="publishForm.description" rows="4" placeholder="详细描述物品特征、时间地点等"
                         maxlength="500" show-word-limit />
                 </el-form-item>
+                <el-form-item label="物品图片（可选）">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp"
+                            ref="lostItemImageInput" style="display:none" @change="handleLostItemImage" />
+                        <el-button size="small" @click="lostItemImageInput?.click()" :loading="publishForm.imageUploading">
+                            上传图片
+                        </el-button>
+                        <span v-if="publishForm.image_url" style="font-size:0.8rem;color:#67c23a">已上传</span>
+                    </div>
+                    <img v-if="publishForm.image_url" :src="publishForm.image_url" style="max-width:200px;max-height:150px;border-radius:8px;margin-top:4px" />
+                </el-form-item>
                 <el-form-item label="地点（可选）">
                     <el-input v-model="publishForm.location" placeholder="例：二食堂三楼" />
                 </el-form-item>
@@ -95,6 +107,9 @@
                         </span>
                     </el-descriptions-item>
                     <el-descriptions-item label="标题">{{ currentItem.title }}</el-descriptions-item>
+                    <el-descriptions-item v-if="currentItem.image_url" label="物品图片">
+                        <img :src="currentItem.image_url" style="max-width:100%;max-height:200px;border-radius:8px" />
+                    </el-descriptions-item>
                     <el-descriptions-item label="描述">{{ currentItem.description }}</el-descriptions-item>
                     <el-descriptions-item label="地点">{{ currentItem.location || '未填' }}</el-descriptions-item>
                     <el-descriptions-item label="联系方式">{{ currentItem.contact || '未填' }}</el-descriptions-item>
@@ -145,6 +160,28 @@ const publishForm = ref({
     location: '',
     contact: '',
 })
+
+const lostItemImageInput = ref<HTMLInputElement>()
+const handleLostItemImage = async (e: Event) => {
+    const input = e.target as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+        ElMessage.error('图片超过 5MB 限制')
+        return
+    }
+    publishForm.value.imageUploading = true
+    try {
+        const { uploadImage } = await import('@/services/upload')
+        const result = await uploadImage(file)
+        publishForm.value.image_url = result.url
+        ElMessage.success('图片已上传')
+    } catch {
+        ElMessage.error('图片上传失败')
+    }
+    publishForm.value.imageUploading = false
+    input.value = ''
+}
 
 const openPublishDialog = () => {
     if (!userStore.isLoggedIn) {

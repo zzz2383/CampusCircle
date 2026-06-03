@@ -194,6 +194,7 @@ class LostItem(Base):
     )
     title: Mapped[str] = mapped_column(String(200), nullable=False, comment="标题")
     description: Mapped[str] = mapped_column(Text, nullable=False, comment="物品描述")
+    image_url: Mapped[Optional[str]] = mapped_column(String(256), nullable=True, comment="物品图片 URL")
     location: Mapped[Optional[str]] = mapped_column(String(200), nullable=True, comment="丢失/拾到地点")
     contact: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, comment="联系方式")
     is_found: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, comment="是否已找回")
