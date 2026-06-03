@@ -246,7 +246,7 @@ const saveProfile = async () => {
 
 // 性别文本
 const genderText = (gender: Gender) => {
-    const map = { male: '男', female: '女', other: '其他' }
+    const map = { male: '男', female: '女' }
     return map[gender] || ''
 }
 

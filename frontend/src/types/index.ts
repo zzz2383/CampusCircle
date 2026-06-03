@@ -1,6 +1,6 @@
 // src/types/index.ts
 // 追加性别枚举
-export type Gender = 'male' | 'female' | 'other'
+export type Gender = 'male' | 'female'
 
 // 更新 UserDTO（后端已补 gender）
 export interface User {
