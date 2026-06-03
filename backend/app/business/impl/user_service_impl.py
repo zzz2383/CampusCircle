@@ -33,6 +33,7 @@ from app.data_access.sqlite_dao.user_dao import IUserDAO
 from app.infrastructure.exceptions import DuplicateError, AuthError
 from app.infrastructure.logger import get_logger
 from app.models.domain import User
+from app.models.enums import UserRole
 from app.models.dto import (
     UserRegisterRequest,
     UserLoginRequest,
@@ -85,12 +86,18 @@ class UserServiceImpl(IUserService):
         # 2. 密码哈希
         password_hash = hash_password(request.password)
 
-        # 3. 创建用户
+        # 3. 判断是否自动设为管理员
+        from app.infrastructure.config import settings
+        admin_ids = [s.strip() for s in settings.ADMIN_STUDENT_IDS.split(",") if s.strip()]
+        role = UserRole.ADMIN if request.student_id in admin_ids else UserRole.STUDENT
+
+        # 4. 创建用户
         user = User(
             student_id=request.student_id,
             email=request.email,
             nickname=request.nickname,
             password_hash=password_hash,
+            role=role,
             department=request.department,
             grade=request.grade,
             gender=request.gender,

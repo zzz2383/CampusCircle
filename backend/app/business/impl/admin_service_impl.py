@@ -9,6 +9,7 @@ from app.data_access.sqlite_dao.club_dao import IClubDAO
 from app.data_access.sqlite_dao.event_dao import IEventDAO
 from app.data_access.sqlite_dao.lost_item_dao import ILostItemDAO
 from app.data_access.redis_repo.blacklist_repo import IBlacklistRepo
+from app.infrastructure.exceptions import BusinessError, ForbiddenError
 from app.infrastructure.logger import get_logger
 from app.models.dto import UserDTO, CommentDTO
 
@@ -84,7 +85,13 @@ class AdminServiceImpl(IAdminService):
             return None
         return UserDTO.model_validate(user)
 
-    async def set_role(self, user_id: int, role: str) -> Optional[UserDTO]:
+    VALID_ROLES = {"student", "teacher"}
+
+    async def set_role(self, user_id: int, role: str, current_user_id: int) -> Optional[UserDTO]:
+        if user_id == current_user_id:
+            raise ForbiddenError(code="SELF_ROLE_CHANGE", message="不能修改自己的角色")
+        if role not in self.VALID_ROLES:
+            raise BusinessError(code="INVALID_ROLE", message=f"无效的角色值: {role}，仅支持 student/teacher")
         user = await self.user_dao.get_by_id(user_id)
         if user is None:
             return None

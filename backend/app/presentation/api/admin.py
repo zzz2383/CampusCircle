@@ -109,7 +109,7 @@ async def admin_set_role(
     _admin: UserDTO = Depends(get_current_admin_user),
     admin_service: IAdminService = Depends(get_admin_service),
 ):
-    result = await admin_service.set_role(user_id, role)
+    result = await admin_service.set_role(user_id, role, current_user_id=_admin.id)
     if result is None:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="用户不存在")
