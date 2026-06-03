@@ -109,6 +109,12 @@ class AdminServiceImpl(IAdminService):
     async def list_banned(self) -> List[Dict[str, Any]]:
         return await self.blacklist_repo.list_banned()
 
+    async def get_post_trend(self, days: int = 7) -> list:
+        return await self.post_dao.get_post_trend(days=days)
+
+    async def get_club_activity(self) -> list:
+        return await self.club_dao.get_post_counts()
+
     async def get_stats(self) -> Dict[str, int]:
         return {
             "total_users": await self.user_dao.count_all(),

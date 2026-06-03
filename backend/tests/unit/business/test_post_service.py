@@ -143,16 +143,18 @@ async def test_list_posts(service, mock_post_dao, mock_session):
         make_post(post_id=3, user_id=1),
         make_post(post_id=2, user_id=1),
     ]
+    mock_post_dao.count_latest.return_value = 10
 
     # Act
     result = await service.list_posts(offset=0, limit=10)
 
     # Assert
     assert len(result.items) == 2
-    assert result.total >= 0
+    assert result.total == 10
     assert result.offset == 0
     assert result.limit == 10
     mock_post_dao.list_latest.assert_awaited_once_with(offset=0, limit=10, tag=None, club_id=None)
+    mock_post_dao.count_latest.assert_awaited_once_with(tag=None, club_id=None)
 
 
 @pytest.mark.asyncio

@@ -140,6 +140,25 @@ async def admin_unban_user(
 # ========== 数据统计 ==========
 
 @router.get("/stats")
+async def admin_get_post_trend(
+    days: int = Query(7, ge=1, le=30, description="近几天"),
+    _admin: UserDTO = Depends(get_current_admin_user),
+    admin_service: IAdminService = Depends(get_admin_service),
+):
+    """近期发帖趋势"""
+    return await admin_service.get_post_trend(days=days)
+
+
+@router.get("/stats/clubs")
+async def admin_get_club_activity(
+    _admin: UserDTO = Depends(get_current_admin_user),
+    admin_service: IAdminService = Depends(get_admin_service),
+):
+    """社团发帖统计"""
+    return await admin_service.get_club_activity()
+
+
+@router.get("/stats")
 async def admin_get_stats(
     _admin: UserDTO = Depends(get_current_admin_user),
     admin_service: IAdminService = Depends(get_admin_service),

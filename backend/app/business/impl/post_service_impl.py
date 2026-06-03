@@ -84,9 +84,10 @@ class PostServiceImpl(IPostService):
         posts = await self.post_dao.list_latest(
             offset=offset, limit=limit, tag=tag, club_id=club_id,
         )
+        total = await self.post_dao.count_latest(tag=tag, club_id=club_id)
         items = [await self._to_dto(p) for p in posts]
         return PostListResponse(
-            items=items, total=len(items), offset=offset, limit=limit,
+            items=items, total=total, offset=offset, limit=limit,
         )
 
     async def get_user_posts(

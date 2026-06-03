@@ -1,125 +1,30 @@
-"""
-功能：帖子数据访问对象接口
-
-实现逻辑：
-    定义帖子相关的 SQLite 数据库操作抽象接口
-
-调用链路：
-    - 被 business 层的 PostService 调用
-    - 由 sqlite_dao 目录下的具体实现类实现
-"""
-
+"""帖子数据访问对象接口"""
 from abc import ABC, abstractmethod
-from typing import Optional, List
-
+from typing import List, Optional
 from app.models.domain import Post
 
 
 class IPostDAO(ABC):
-    """帖子数据访问接口"""
-
     @abstractmethod
-    async def insert(self, post: Post) -> int:
-        """创建帖子
-
-        参数：
-            post: Post ORM 对象（不含 id）
-
-        返回值：
-            新帖子的 id
-        """
-        ...
-
+    async def insert(self, post: Post) -> int: ...
     @abstractmethod
-    async def get_by_id(self, post_id: int) -> Optional[Post]:
-        """根据 ID 获取帖子
-
-        参数：
-            post_id: 帖子 ID
-
-        返回值：
-            Post ORM 对象或 None
-        """
-        ...
-
+    async def get_by_id(self, post_id: int) -> Optional[Post]: ...
     @abstractmethod
-    async def delete(self, post_id: int) -> bool:
-        """删除帖子（软删除）
-
-        参数：
-            post_id: 帖子 ID
-
-        返回值：
-            是否删除成功
-        """
-        ...
-
+    async def delete(self, post_id: int) -> bool: ...
     @abstractmethod
-    async def list_latest(
-        self, offset: int = 0, limit: int = 20, tag: Optional[str] = None,
-        club_id: Optional[int] = None,
-    ) -> List[Post]:
-        """获取最新帖子列表（支持按标签/社团筛选）
-
-        参数：
-            offset: 分页偏移量
-            limit: 每页数量（默认 20）
-            tag: 可选的话题标签筛选
-            club_id: 可选的社团 ID 筛选
-
-        返回值：
-            Post ORM 对象列表
-        """
-        ...
-
+    async def list_latest(self, offset: int = 0, limit: int = 20, tag: Optional[str] = None,
+                          club_id: Optional[int] = None) -> List[Post]: ...
     @abstractmethod
-    async def search(self, keyword: str, offset: int = 0, limit: int = 20) -> List[Post]:
-        """全文搜索帖子
-
-        参数：
-            keyword: 搜索关键词
-            offset: 分页偏移量
-            limit: 每页数量
-
-        返回值：
-            匹配的 Post ORM 对象列表
-        """
-        ...
-
+    async def search(self, keyword: str, offset: int = 0, limit: int = 20) -> List[Post]: ...
     @abstractmethod
-    async def increment_view_count(self, post_id: int) -> int:
-        """增加帖子浏览量（+1）
-
-        参数：
-            post_id: 帖子 ID
-
-        返回值：
-            更新后的浏览量
-        """
-        ...
-
+    async def increment_view_count(self, post_id: int) -> int: ...
     @abstractmethod
-    async def count_comments(self, post_id: int) -> int:
-        """获取帖子评论数"""
-        ...
-
+    async def count_comments(self, post_id: int) -> int: ...
     @abstractmethod
-    async def count_all(self) -> int:
-        """获取帖子总数"""
-        ...
-
+    async def count_all(self) -> int: ...
     @abstractmethod
-    async def list_by_user(
-        self, user_id: int, offset: int = 0, limit: int = 20
-    ) -> List[Post]:
-        """获取用户的帖子列表
-
-        参数：
-            user_id: 用户 ID
-            offset: 分页偏移量
-            limit: 每页数量
-
-        返回值：
-            Post ORM 对象列表
-        """
-        ...
+    async def count_latest(self, tag: Optional[str] = None, club_id: Optional[int] = None) -> int: ...
+    @abstractmethod
+    async def get_post_trend(self, days: int = 7) -> list: ...
+    @abstractmethod
+    async def list_by_user(self, user_id: int, offset: int = 0, limit: int = 20) -> List[Post]: ...

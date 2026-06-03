@@ -108,10 +108,13 @@
                             <el-dropdown @command="(cmd: string) => handleUserCommand(cmd, row)">
                                 <el-button size="small">管理</el-button>
                                 <template #dropdown>
+                                    <!-- 在用户管理表格的操作列中 -->
                                     <el-dropdown-menu>
                                         <el-dropdown-item command="role_student">设为学生</el-dropdown-item>
                                         <el-dropdown-item command="role_teacher">设为教师</el-dropdown-item>
-                                        <el-dropdown-item command="role_admin">设为管理员</el-dropdown-item>
+                                        <!-- 仅超级管理员可见 -->
+                                        <el-dropdown-item v-if="isSuperAdmin"
+                                            command="role_admin">设为管理员</el-dropdown-item>
                                         <el-dropdown-item v-if="!row.is_banned" command="ban"
                                             divided>封禁24小时</el-dropdown-item>
                                         <el-dropdown-item v-else command="unban">解封</el-dropdown-item>
@@ -179,7 +182,7 @@
                     <el-table-column prop="id" label="ID" width="60" />
                     <el-table-column prop="title" label="标题" />
                     <el-table-column label="类型" width="80"><template #default="{ row }">{{ row.is_lost ? '丢失' : '拾到'
-                            }}</template></el-table-column>
+                    }}</template></el-table-column>
                     <el-table-column label="操作" width="100">
                         <template #default="{ row }">
                             <el-button type="danger" size="small" @click="handleDeleteLostItem(row.id)">删除</el-button>
@@ -207,7 +210,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { User, Document, Flag, Calendar, Search } from '@element-plus/icons-vue'
@@ -229,6 +232,8 @@ const adminName = userStore.user?.nickname
 // 图表实例
 let trendChart: InstanceType<typeof Chart> | null = null
 let clubChart: InstanceType<typeof Chart> | null = null
+
+const isSuperAdmin = computed(() => userStore.user?.id === 1)
 
 // 初始化图表（模拟数据）
 const initCharts = () => {
