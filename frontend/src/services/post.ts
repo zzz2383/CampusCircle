@@ -5,7 +5,13 @@ import type { PostDTO, PostListResponse, CreatePostPayload, LikeResponse } from 
  * 获取帖子列表
  * GET /api/posts?offset=0&limit=20&tag=课程
  */
-export const getPosts = (params: { offset?: number; limit?: number; tag?: string; search?: string }) => {
+export const getPosts = (params?: {
+    offset?: number;
+    limit?: number;
+    tag?: string;
+    club_id?: number;
+    keyword?: string
+}) => {
     return request.get<never, PostListResponse>('/posts', { params })
 }
 
