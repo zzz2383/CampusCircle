@@ -33,3 +33,8 @@ class ICommentDAO(ABC):
     async def delete(self, comment_id: int) -> bool:
         """软删除评论"""
         ...
+
+    @abstractmethod
+    async def list_all(self, offset: int = 0, limit: int = 20) -> List[Comment]:
+        """获取所有评论列表（管理员用）"""
+        ...

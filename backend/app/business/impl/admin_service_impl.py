@@ -1,8 +1,6 @@
 """管理后台业务逻辑实现"""
 from typing import Any, Dict, List, Optional
-
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.business.interfaces.admin_service import IAdminService
 from app.data_access.sqlite_dao.user_dao import IUserDAO
 from app.data_access.sqlite_dao.post_dao import IPostDAO
@@ -12,7 +10,7 @@ from app.data_access.sqlite_dao.event_dao import IEventDAO
 from app.data_access.sqlite_dao.lost_item_dao import ILostItemDAO
 from app.data_access.redis_repo.blacklist_repo import IBlacklistRepo
 from app.infrastructure.logger import get_logger
-from app.models.dto import UserDTO
+from app.models.dto import UserDTO, CommentDTO
 
 logger = get_logger(__name__)
 
@@ -20,14 +18,9 @@ logger = get_logger(__name__)
 class AdminServiceImpl(IAdminService):
     def __init__(
         self,
-        user_dao: IUserDAO,
-        post_dao: IPostDAO,
-        comment_dao: ICommentDAO,
-        club_dao: IClubDAO,
-        event_dao: IEventDAO,
-        lost_item_dao: ILostItemDAO,
-        blacklist_repo: IBlacklistRepo,
-        db_session: AsyncSession,
+        user_dao: IUserDAO, post_dao: IPostDAO, comment_dao: ICommentDAO,
+        club_dao: IClubDAO, event_dao: IEventDAO, lost_item_dao: ILostItemDAO,
+        blacklist_repo: IBlacklistRepo, db_session: AsyncSession,
     ):
         self.user_dao = user_dao
         self.post_dao = post_dao
@@ -49,26 +42,33 @@ class AdminServiceImpl(IAdminService):
     async def delete_comment(self, comment_id: int) -> bool:
         result = await self.comment_dao.delete(comment_id)
         await self.db_session.commit()
-        logger.info(f"Admin deleted comment #{comment_id}")
         return result
 
     async def delete_event(self, event_id: int) -> bool:
         result = await self.event_dao.delete(event_id)
         await self.db_session.commit()
-        logger.info(f"Admin deleted event #{event_id}")
         return result
 
     async def delete_lost_item(self, item_id: int) -> bool:
         result = await self.lost_item_dao.delete(item_id)
         await self.db_session.commit()
-        logger.info(f"Admin deleted lost item #{item_id}")
         return result
 
     async def delete_club(self, club_id: int) -> bool:
         result = await self.club_dao.delete(club_id)
         await self.db_session.commit()
-        logger.info(f"Admin deleted club #{club_id}")
         return result
+
+    async def list_all_comments(self, offset: int = 0, limit: int = 20) -> dict:
+        comments = await self.comment_dao.list_all(offset=offset, limit=limit)
+        items = []
+        for c in comments:
+            items.append(CommentDTO(
+                id=c.id, post_id=c.post_id, user_id=c.user_id,
+                author_nickname=c.author.nickname if c.author else None,
+                content=c.content, parent_id=c.parent_id, created_at=c.created_at,
+            ))
+        return {"items": items, "total": len(items), "offset": offset, "limit": limit}
 
     # ========== 用户管理 ==========
 
@@ -90,22 +90,17 @@ class AdminServiceImpl(IAdminService):
             return None
         await self.user_dao.update_role(user_id, role)
         await self.db_session.commit()
-        logger.info(f"Admin set user #{user_id} role to {role}")
         updated = await self.user_dao.get_by_id(user_id)
         return UserDTO.model_validate(updated)
 
     async def ban_user(self, user_id: int, duration_hours: int = 24) -> None:
         await self.blacklist_repo.ban(user_id, duration_hours)
-        logger.info(f"Admin banned user #{user_id} for {duration_hours}h")
 
     async def unban_user(self, user_id: int) -> None:
         await self.blacklist_repo.unban(user_id)
-        logger.info(f"Admin unbanned user #{user_id}")
 
     async def list_banned(self) -> List[Dict[str, Any]]:
         return await self.blacklist_repo.list_banned()
-
-    # ========== 数据统计 ==========
 
     async def get_stats(self) -> Dict[str, int]:
         return {
