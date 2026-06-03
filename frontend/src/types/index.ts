@@ -232,3 +232,33 @@ export interface EventParticipant {
     user_nickname: string
     created_at: string
 }
+
+// 追加管理员统计数据类型
+export interface AdminStats {
+    total_users: number
+    total_posts: number
+    total_clubs: number
+    total_events: number
+    total_lost_items: number
+}
+
+// 管理员用户列表项（与UserDTO一致，可直接复用）
+export interface AdminUser extends User { }
+
+// 被封禁用户信息
+export interface BannedUser {
+    user_id: number
+    banned_at: string
+    remaining_seconds: number
+}
+
+// 评论管理项
+export interface AdminComment {
+    id: number
+    post_id: number
+    user_id: number
+    author_nickname: string
+    content: string
+    parent_id: number | null
+    created_at: string
+}
