@@ -50,6 +50,11 @@ async def admin_delete_lost_item(
 
 @router.delete("/clubs/{club_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def admin_delete_club(
+    club_id: int = Path(...),
+    _admin: UserDTO = Depends(get_current_admin_user),
+    admin_service: IAdminService = Depends(get_admin_service),
+):
+    await admin_service.delete_club(club_id)
 
 
 @router.get("/comments")
@@ -61,11 +66,6 @@ async def admin_list_comments(
 ):
     """获取所有评论列表（管理员）"""
     return await admin_service.list_all_comments(offset=offset, limit=limit)
-    club_id: int = Path(...),
-    _admin: UserDTO = Depends(get_current_admin_user),
-    admin_service: IAdminService = Depends(get_admin_service),
-):
-    await admin_service.delete_club(club_id)
 
 
 # ========== 用户管理 ==========
@@ -74,7 +74,7 @@ async def admin_list_comments(
 async def admin_list_users(
     offset: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
-    keyword: str = Query(None, description="搜索昵称或学号"),
+    keyword: str | None = Query(None, description="搜索昵称或学号"),
     _admin: UserDTO = Depends(get_current_admin_user),
     admin_service: IAdminService = Depends(get_admin_service),
 ):
