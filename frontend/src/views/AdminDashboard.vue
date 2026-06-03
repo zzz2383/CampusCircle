@@ -182,7 +182,7 @@
                     <el-table-column prop="id" label="ID" width="60" />
                     <el-table-column prop="title" label="标题" />
                     <el-table-column label="类型" width="80"><template #default="{ row }">{{ row.is_lost ? '丢失' : '拾到'
-                            }}</template></el-table-column>
+                    }}</template></el-table-column>
                     <el-table-column label="操作" width="100">
                         <template #default="{ row }">
                             <el-button type="danger" size="small" @click="handleDeleteLostItem(row.id)">删除</el-button>
@@ -247,20 +247,33 @@ const initCharts = async () => {
     if (clubChart) clubChart.destroy()
 
     // 获取发帖趋势数据
+    // 获取发帖趋势数据（自动补全最近7天）
     let trendLabels: string[] = []
     let trendData: number[] = []
     try {
-        const trendRes = await getPostTrend(7)
-        // 后端返回格式: [{ date: "2026-05-28", count: 3 }, ...]
-        trendLabels = trendRes.map(item => {
-            // 格式化日期为 "MM/DD" 或者 "星期X"，这里简单显示日期
-            const date = new Date(item.date)
-            return `${date.getMonth() + 1}/${date.getDate()}`
+        const trendRes = await getPostTrend(7) // 假设后端返回 [{date, count}]
+        // 转为 Map 方便查找
+        const countByDate = new Map(trendRes.map(item => [item.date, item.count]))
+
+        // 生成最近7天的日期列表 (YYYY-MM-DD)
+        const dates: string[] = []
+        const today = new Date()
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today)
+            d.setDate(today.getDate() - i)
+            const dateStr = d.toISOString().slice(0, 10)
+            dates.push(dateStr)
+        }
+
+        // 生成标签 (MM/DD) 和数据
+        trendLabels = dates.map(d => {
+            const [_year, month, day] = d.split('-')
+            return `${month}/${day}`
         })
-        trendData = trendRes.map(item => item.count)
+        trendData = dates.map(d => countByDate.get(d) || 0)
     } catch (error) {
         console.error('获取发帖趋势失败', error)
-        // 使用模拟数据兜底
+        // 兜底模拟数据
         trendLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
         trendData = [45, 52, 38, 47, 69, 88, 73]
     }
