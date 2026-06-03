@@ -47,3 +47,12 @@ export const unbanUser = (userId: number) => {
 export const getAdminComments = (params?: { offset?: number; limit?: number }) => {
     return request.get<never, { items: AdminComment[]; total: number; offset: number; limit: number }>('/admin/comments', { params })
 }
+// 发帖趋势
+export const getPostTrend = (days = 7) => {
+    return request.get<never, { date: string; count: number }[]>(`/admin/stats/posts-trend?days=${days}`)
+}
+
+// 社团帖子统计
+export const getClubPostStats = () => {
+    return request.get<never, { club_id: number; club_name: string; post_count: number }[]>('/admin/stats/clubs')
+}

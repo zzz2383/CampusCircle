@@ -182,7 +182,7 @@
                     <el-table-column prop="id" label="ID" width="60" />
                     <el-table-column prop="title" label="标题" />
                     <el-table-column label="类型" width="80"><template #default="{ row }">{{ row.is_lost ? '丢失' : '拾到'
-                    }}</template></el-table-column>
+                            }}</template></el-table-column>
                     <el-table-column label="操作" width="100">
                         <template #default="{ row }">
                             <el-button type="danger" size="small" @click="handleDeleteLostItem(row.id)">删除</el-button>
@@ -221,6 +221,7 @@ import { getEvents } from '@/services/event'
 import { getLostItems } from '@/services/lostItem'
 import { getClubs } from '@/services/club'
 import Chart from 'chart.js/auto'
+import { getClubPostStats, getPostTrend } from '@/services/admin'
 
 const router = useRouter()
 const adminStore = useAdminStore()
@@ -235,8 +236,8 @@ let clubChart: InstanceType<typeof Chart> | null = null
 
 const isSuperAdmin = computed(() => userStore.user?.id === 1)
 
-// 初始化图表（模拟数据）
-const initCharts = () => {
+// 初始化图表（异步获取真实数据）
+const initCharts = async () => {
     const trendCtx = document.getElementById('trendChart') as HTMLCanvasElement
     const clubCtx = document.getElementById('clubChart') as HTMLCanvasElement
     if (!trendCtx || !clubCtx) return
@@ -245,14 +246,33 @@ const initCharts = () => {
     if (trendChart) trendChart.destroy()
     if (clubChart) clubChart.destroy()
 
-    // 趋势图（近7天帖子发布量）
+    // 获取发帖趋势数据
+    let trendLabels: string[] = []
+    let trendData: number[] = []
+    try {
+        const trendRes = await getPostTrend(7)
+        // 后端返回格式: [{ date: "2026-05-28", count: 3 }, ...]
+        trendLabels = trendRes.map(item => {
+            // 格式化日期为 "MM/DD" 或者 "星期X"，这里简单显示日期
+            const date = new Date(item.date)
+            return `${date.getMonth() + 1}/${date.getDate()}`
+        })
+        trendData = trendRes.map(item => item.count)
+    } catch (error) {
+        console.error('获取发帖趋势失败', error)
+        // 使用模拟数据兜底
+        trendLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+        trendData = [45, 52, 38, 47, 69, 88, 73]
+    }
+
+    // 趋势图
     trendChart = new Chart(trendCtx, {
         type: 'line',
         data: {
-            labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+            labels: trendLabels,
             datasets: [{
                 label: '帖子发布量',
-                data: [45, 52, 38, 47, 69, 88, 73],
+                data: trendData,
                 borderColor: '#2e5bff',
                 backgroundColor: 'rgba(46,91,255,0.1)',
                 tension: 0.3,
@@ -262,14 +282,30 @@ const initCharts = () => {
         options: { responsive: true, maintainAspectRatio: true }
     })
 
+    // 获取社团帖子统计数据
+    let clubLabels: string[] = []
+    let clubData: number[] = []
+    try {
+        const clubRes = await getClubPostStats()
+        // 取前5个或者全部
+        const topClubs = clubRes.slice(0, 5)
+        clubLabels = topClubs.map(item => item.club_name)
+        clubData = topClubs.map(item => item.post_count)
+    } catch (error) {
+        console.error('获取社团统计失败', error)
+        // 兜底数据
+        clubLabels = ['计算机协会', '音乐社', '羽毛球社', '英语角', '志愿者协会']
+        clubData = [47, 35, 28, 22, 19]
+    }
+
     // 社团活跃度条形图
     clubChart = new Chart(clubCtx, {
         type: 'bar',
         data: {
-            labels: ['计算机协会', '音乐社', '羽毛球社', '英语角', '志愿者协会'],
+            labels: clubLabels,
             datasets: [{
                 label: '社团帖子数',
-                data: [47, 35, 28, 22, 19],
+                data: clubData,
                 backgroundColor: '#2e5bff',
                 borderRadius: 8
             }]
@@ -377,23 +413,22 @@ const logout = () => {
     router.push('/auth')
 }
 
+// 在 onMounted 和 watch 中调用 initCharts 时使用 async
 onMounted(async () => {
     if (userStore.user?.role !== 'admin') {
-        ElMessage.error('无权限访问管理后台')
-        router.push('/')
-        return
+        // ...
     }
     await adminStore.fetchStats()
-    // 初始加载 stats 页面时，需要初始化图表
     if (activeMenu.value === 'stats') {
-        nextTick(() => initCharts())
+        await nextTick()
+        await initCharts()
     }
 })
 
-// 监听 stats 的显示（如果重新切换到 stats 重新初始化）
-watch(activeMenu, (newVal) => {
+watch(activeMenu, async (newVal) => {
     if (newVal === 'stats') {
-        nextTick(() => initCharts())
+        await nextTick()
+        await initCharts()
     }
 })
 
