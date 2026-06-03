@@ -185,3 +185,47 @@ export interface EventDTO {
     club_name?: string | null
     created_at: string
 }
+
+// 活动相关类型
+export interface Event {
+    id: number
+    title: string
+    description: string
+    location: string | null
+    max_participants: number | null
+    participant_count: number
+    is_registered: boolean
+    club_id: number | null
+    club_name?: string | null
+    start_time: string
+    end_time: string
+    created_at: string
+}
+
+export interface CreateEventPayload {
+    title: string
+    description: string
+    location?: string
+    max_participants?: number | null
+    club_id?: number | null
+    start_time: string
+    end_time: string
+}
+
+export interface UpdateEventPayload {
+    title?: string
+    description?: string
+    location?: string | null
+    max_participants?: number | null
+    club_id?: number | null
+    start_time?: string
+    end_time?: string
+}
+
+export interface EventParticipant {
+    id: number
+    user_id: number
+    event_id: number
+    user_nickname: string
+    created_at: string
+}

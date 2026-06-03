@@ -7,6 +7,7 @@
                 <el-button link @click="router.push('/rank')">排行榜</el-button>
                 <el-button link @click="router.push('/lost-items')">失物招领</el-button>
                 <el-button link @click="router.push('/clubs')">社团</el-button>
+                <el-button link @click="router.push('/events')">活动</el-button>
                 <!-- 通知铃铛 -->
                 <div class="notification-bell" @click="toggleNotificationPanel" ref="bellRef">
                     <el-badge :value="notificationStore.unreadCount" :hidden="notificationStore.unreadCount === 0">

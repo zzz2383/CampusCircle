@@ -12,6 +12,8 @@ const router = createRouter({
         { path: '/lost-items', name: 'lostItems', component: () => import('@/views/LostItem.vue') },
         { path: '/clubs/:id', name: 'clubDetail', component: () => import('@/views/ClubDetail.vue') },
         { path: '/clubs', name: 'clubs', component: () => import('@/views/ClubList.vue') },
+        { path: '/events/:id', name: 'eventDetail', component: () => import('@/views/EventDetail.vue') },
+        { path: '/events', name: 'events', component: () => import('@/views/EventList.vue') },
     ],
 })
 
