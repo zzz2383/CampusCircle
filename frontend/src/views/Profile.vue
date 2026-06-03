@@ -100,9 +100,9 @@
                     <div style="display:flex;align-items:center;gap:12px">
                         <el-avatar :size="60" :src="editForm.avatar_url || undefined">
                             {{ editForm.nickname?.charAt(0) || '?' }}</el-avatar>
-                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp"
-                            ref="avatarInputRef" style="display:none" @change="handleAvatarChange" />
-                        <el-button size="small" @click="$refs.avatarInputRef.click()">选择图片</el-button>
+                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" ref="avatarInputRef"
+                            style="display:none" @change="handleAvatarChange" />
+                        <el-button size="small" @click="avatarInputRef?.click()">选择图片</el-button>
                     </div>
                     <div class="form-hint">支持 jpg/png/gif/webp，建议 200x200，上传后需点击保存生效</div>
                 </el-form-item>

@@ -119,14 +119,16 @@
                 <el-form-item label="内容" required>
                     <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
                         <el-button size="small" @click="triggerImageUpload">
-                            <el-icon><Picture /></el-icon> 插入图片
+                            <el-icon>
+                                <Picture />
+                            </el-icon> 插入图片
                         </el-button>
                         <span style="font-size:0.75rem;color:var(--el-text-color-secondary)">
                             上传后自动插入 markdown 图片标记
                         </span>
                     </div>
-                    <input type="file" accept="image/png,image/jpeg,image/gif,image/webp"
-                        ref="postImageInput" style="display:none" @change="handlePostImageUpload" />
+                    <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" ref="postImageInput"
+                        style="display:none" @change="handlePostImageUpload" />
                     <el-input type="textarea" v-model="postForm.content" rows="6" placeholder="分享你的校园生活..."
                         maxlength="2000" show-word-limit />
                 </el-form-item>
@@ -226,9 +228,7 @@ const handlePostImageUpload = async (e: Event) => {
     try {
         const { uploadImage } = await import('@/services/upload')
         const result = await uploadImage(file)
-        postForm.value.content += '
-![图片](' + result.url + ')
-'
+        postForm.value.content += `\n![图片](${result.url})\n`
         ElMessage.success('图片已插入')
     } catch {
         ElMessage.error('图片上传失败')
