@@ -114,3 +114,34 @@ export interface UpdateProfilePayload {
     gender?: Gender
     avatar_url?: string
 }
+
+export interface LostItem {
+    id: number
+    user_id: number
+    title: string
+    description: string
+    location: string | null
+    contact: string | null
+    is_found: boolean
+    is_lost: boolean           // true=丢失，false=拾到
+    expires_at: string         // 过期时间 ISO 字符串
+    created_at: string
+    author_nickname: string
+    // 前端计算字段
+    is_expired?: boolean
+}
+
+export interface CreateLostItemPayload {
+    title: string
+    description: string
+    location?: string
+    contact?: string
+    is_lost: boolean
+}
+
+export interface LostItemListResponse {
+    items: LostItem[]
+    total: number
+    offset: number
+    limit: number
+}

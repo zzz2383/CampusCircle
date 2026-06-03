@@ -9,6 +9,7 @@ const router = createRouter({
         { path: '/posts/:id', name: 'postDetail', component: () => import('@/views/PostDetail.vue') },
         { path: '/rank', name: 'rank', component: () => import('@/views/Rank.vue') },
         { path: '/profile', name: 'profile', component: () => import('@/views/Profile.vue') },
+        { path: '/lost-items', name: 'lostItems', component: () => import('@/views/LostItem.vue') },
     ],
 })
 

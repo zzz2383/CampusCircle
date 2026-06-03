@@ -5,6 +5,7 @@
             <div class="logo">校园圈</div>
             <div class="nav-links">
                 <el-button link @click="router.push('/rank')">排行榜</el-button>
+                <el-button link @click="router.push('/lost-items')">失物招领</el-button>
                 <!-- 通知铃铛 -->
                 <div class="notification-bell" @click="toggleNotificationPanel" ref="bellRef">
                     <el-badge :value="notificationStore.unreadCount" :hidden="notificationStore.unreadCount === 0">
