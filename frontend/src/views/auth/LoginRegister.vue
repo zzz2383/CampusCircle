@@ -210,16 +210,7 @@ const handleRegister = async () => {
             registerLoading.value = true
             try {
                 const { confirmPassword, ...registerData } = registerForm
-                // 确保字段名与后端一致
-                await apiRegister({
-                    student_id: registerForm.student_id,
-                    email: registerForm.email,
-                    password: registerForm.password,
-                    nickname: registerForm.nickname || undefined,
-                    department: registerForm.department || undefined,
-                    grade: registerForm.grade || undefined,
-                    gender: registerForm.gender || undefined,
-                })
+                await apiRegister(registerData)   // 直接传递整个 registerData
                 ElMessage.success('注册成功，请登录')
                 activeTab.value = 'login'
                 loginForm.student_id = registerForm.student_id
