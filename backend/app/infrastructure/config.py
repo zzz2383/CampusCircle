@@ -53,6 +53,11 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     LOG_LEVEL: str = "DEBUG"
 
+    # 上传配置
+    UPLOAD_DIR: str = "uploads"
+    MAX_UPLOAD_SIZE: int = 5 * 1024 * 1024
+    ALLOWED_EXTENSIONS: str = "jpg,jpeg,png,gif,webp"
+
     # CORS
     CORS_ORIGINS: str = '["http://localhost:5173","http://localhost:3000"]'
 

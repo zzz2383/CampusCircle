@@ -117,6 +117,16 @@
                     <el-input v-model="postForm.title" placeholder="给帖子一个醒目的标题" maxlength="100" show-word-limit />
                 </el-form-item>
                 <el-form-item label="内容" required>
+                    <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+                        <el-button size="small" @click="triggerImageUpload">
+                            <el-icon><Picture /></el-icon> 插入图片
+                        </el-button>
+                        <span style="font-size:0.75rem;color:var(--el-text-color-secondary)">
+                            上传后自动插入 markdown 图片标记
+                        </span>
+                    </div>
+                    <input type="file" accept="image/png,image/jpeg,image/gif,image/webp"
+                        ref="postImageInput" style="display:none" @change="handlePostImageUpload" />
                     <el-input type="textarea" v-model="postForm.content" rows="6" placeholder="分享你的校园生活..."
                         maxlength="2000" show-word-limit />
                 </el-form-item>
@@ -140,7 +150,7 @@
 import { ref, onMounted, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Search, Star, ChatDotRound, View, Plus } from '@element-plus/icons-vue'
+import { Search, Star, ChatDotRound, View, Plus, Picture } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/userStore'
 import { usePostStore } from '@/stores/postStore'
 import { useNotificationStore } from '@/stores/notificationStore'
@@ -181,6 +191,7 @@ const clubs = ref<any[]>([])
 
 // 发帖对话框
 const dialogVisible = ref(false)
+const postImageInput = ref<HTMLInputElement>()
 const submitting = ref(false)
 const postForm = ref({
     title: '',
@@ -197,6 +208,32 @@ const openPostDialog = () => {
     }
     dialogVisible.value = true
     postForm.value = { title: '', content: '', tagsArray: [] }
+}
+
+
+const triggerImageUpload = () => {
+    postImageInput.value?.click()
+}
+
+const handlePostImageUpload = async (e: Event) => {
+    const input = e.target as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+        ElMessage.error('图片超过 5MB 限制')
+        return
+    }
+    try {
+        const { uploadImage } = await import('@/services/upload')
+        const result = await uploadImage(file)
+        postForm.value.content += '
+![图片](' + result.url + ')
+'
+        ElMessage.success('图片已插入')
+    } catch {
+        ElMessage.error('图片上传失败')
+    }
+    input.value = ''
 }
 
 const submitPost = async () => {

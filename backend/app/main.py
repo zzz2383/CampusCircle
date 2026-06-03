@@ -24,7 +24,7 @@ from app.infrastructure.exceptions import AppException
 from app.infrastructure.logger import get_logger
 from app.infrastructure.db import init_db, close_db
 from app.infrastructure.redis_client import get_redis, close_redis
-from app.presentation.api import auth, posts, likes, rank, notifications, comments, clubs, events, lost_items
+from app.presentation.api import auth, posts, likes, rank, notifications, comments, clubs, events, lost_items, upload
 from app.presentation.api.posts import user_post_router
 from app.presentation.websocket.handler import websocket_handler
 
@@ -79,6 +79,13 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # 静态文件（上传目录）
+    from pathlib import Path
+    from fastapi.staticfiles import StaticFiles
+    upload_dir = Path(settings.UPLOAD_DIR)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
+
     # 注册路由
     app.include_router(auth.router)
     app.include_router(posts.router)
@@ -90,6 +97,7 @@ def create_app() -> FastAPI:
     app.include_router(events.router)
     app.include_router(user_post_router)
     app.include_router(lost_items.router)
+    app.include_router(upload.router)
 
     # WebSocket
     from fastapi import WebSocket

@@ -17,7 +17,7 @@
             <!-- 个人信息卡片 -->
             <div class="info-card">
                 <div class="avatar-section">
-                    <el-avatar :size="80" class="avatar">
+                    <el-avatar :size="80" class="avatar" :src="user.avatar_url || undefined">
                         {{ user.nickname.charAt(0) }}
                     </el-avatar>
                     <h2 class="nickname">{{ user.nickname }}</h2>
@@ -95,12 +95,16 @@
                         <el-radio value="other">其他</el-radio>
                     </el-radio-group>
                 </el-form-item>
-                <!-- 头像上传占位 -->
+                <!-- 头像上传 -->
                 <el-form-item label="头像">
-                    <el-upload action="#" :auto-upload="false" :show-file-list="false" @change="handleAvatarChange">
-                        <el-button size="small">上传头像（演示）</el-button>
-                    </el-upload>
-                    <div class="form-hint">建议上传 200x200 图片</div>
+                    <div style="display:flex;align-items:center;gap:12px">
+                        <el-avatar :size="60" :src="editForm.avatar_url || undefined">
+                            {{ editForm.nickname?.charAt(0) || '?' }}</el-avatar>
+                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp"
+                            ref="avatarInputRef" style="display:none" @change="handleAvatarChange" />
+                        <el-button size="small" @click="$refs.avatarInputRef.click()">选择图片</el-button>
+                    </div>
+                    <div class="form-hint">支持 jpg/png/gif/webp，建议 200x200，上传后需点击保存生效</div>
                 </el-form-item>
             </el-form>
             <template #footer>
@@ -191,8 +195,26 @@ const openEditDialog = () => {
     editDialogVisible.value = true
 }
 
-const handleAvatarChange = () => {
-    ElMessage.info('头像上传功能即将开放')
+const avatarInputRef = ref<HTMLInputElement>()
+
+const handleAvatarChange = async (e: Event) => {
+    const input = e.target as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+        ElMessage.error('图片超过 5MB 限制')
+        return
+    }
+    try {
+        const { uploadImage } = await import('@/services/upload')
+        const result = await uploadImage(file)
+        editForm.value.avatar_url = result.url
+        ElMessage.success('图片上传成功，请点击保存')
+    } catch {
+        ElMessage.error('图片上传失败')
+    }
+    // 清除 input 以允许重复选择同一文件
+    input.value = ''
 }
 
 const saveProfile = async () => {
