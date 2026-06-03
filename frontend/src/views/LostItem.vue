@@ -34,7 +34,8 @@
                     <span v-if="item.is_expired" class="status-badge expired">已过期</span>
                     <span v-else-if="item.is_found" class="status-badge found">已找回</span>
                 </div>
-                <img v-if="item.image_url" :src="item.image_url" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
+                <img v-if="item.image_url" :src="item.image_url"
+                    style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:8px" />
                 <div class="item-title">{{ item.title }}</div>
                 <div class="item-meta">
                     <span><el-icon>
@@ -75,14 +76,16 @@
                 </el-form-item>
                 <el-form-item label="物品图片（可选）">
                     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp"
-                            ref="lostItemImageInput" style="display:none" @change="handleLostItemImage" />
-                        <el-button size="small" @click="lostItemImageInput?.click()" :loading="publishForm.imageUploading">
+                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" ref="lostItemImageInput"
+                            style="display:none" @change="handleLostItemImage" />
+                        <el-button size="small" @click="lostItemImageInput?.click()"
+                            :loading="publishForm.imageUploading">
                             上传图片
                         </el-button>
                         <span v-if="publishForm.image_url" style="font-size:0.8rem;color:#67c23a">已上传</span>
                     </div>
-                    <img v-if="publishForm.image_url" :src="publishForm.image_url" style="max-width:200px;max-height:150px;border-radius:8px;margin-top:4px" />
+                    <img v-if="publishForm.image_url" :src="publishForm.image_url"
+                        style="max-width:200px;max-height:150px;border-radius:8px;margin-top:4px" />
                 </el-form-item>
                 <el-form-item label="地点（可选）">
                     <el-input v-model="publishForm.location" placeholder="例：二食堂三楼" />
@@ -159,6 +162,8 @@ const publishForm = ref({
     description: '',
     location: '',
     contact: '',
+    image_url: '',
+    imageUploading: false,
 })
 
 const lostItemImageInput = ref<HTMLInputElement>()
@@ -189,7 +194,7 @@ const openPublishDialog = () => {
         router.push('/auth')
         return
     }
-    publishForm.value = { is_lost: true, title: '', description: '', location: '', contact: '' }
+    publishForm.value = { is_lost: true, title: '', description: '', location: '', contact: '', image_url: '', imageUploading: false }
     publishVisible.value = true
 }
 

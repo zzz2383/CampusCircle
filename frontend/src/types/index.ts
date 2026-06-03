@@ -132,6 +132,8 @@ export interface LostItem {
     author_nickname: string
     // 前端计算字段
     is_expired?: boolean
+    image_url?: string | null
+
 }
 
 export interface CreateLostItemPayload {
