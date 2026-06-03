@@ -77,13 +77,16 @@ class PostDAOImpl(IPostDAO):
         return result.scalar() or 0
 
     async def get_post_trend(self, days: int = 7) -> list:
-        since = datetime.now(timezone.utc) - timedelta(days=days)
-        from sqlalchemy import cast, Date
-        result = await self.session.execute(
-            select(cast(Post.created_at, Date).label("date"), func.count().label("count"))
-            .where(Post.created_at >= since, Post.is_active.is_(True))
-            .group_by(cast(Post.created_at, Date))
-            .order_by(cast(Post.created_at, Date)))
+        since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        from sqlalchemy import text
+        sql = text("""
+            SELECT DATE(created_at) as date, COUNT(*) as count
+            FROM posts
+            WHERE created_at >= :since AND is_active = 1
+            GROUP BY DATE(created_at)
+            ORDER BY DATE(created_at)
+        """)
+        result = await self.session.execute(sql, {"since": since})
         return [{"date": str(row[0]), "count": row[1]} for row in result]
 
     async def list_by_user(self, user_id: int, offset: int = 0, limit: int = 20) -> List[Post]:
