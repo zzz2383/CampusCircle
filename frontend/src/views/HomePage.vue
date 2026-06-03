@@ -156,6 +156,9 @@ const handleSearch = () => {
     postStore.setSearch(searchKeyword.value)
 }
 
+// 声明清理函数占位符
+let unsubWebSocket: (() => void) | null = null
+let clickOutsideHandler: ((event: MouseEvent) => void) | null = null
 
 const showNotificationPanel = ref(false)
 const bellRef = ref<HTMLElement | null>(null)
@@ -256,20 +259,16 @@ const handleClickOutside = (event: MouseEvent) => {
 
 // WebSocket 消息处理
 const handleWebSocketMessage = (data: any) => {
-    // 根据后端约定的消息结构解析
-    // 示例结构：{ type: 'comment', data: { id, postId, author, content, ... } }
-    console.log('[WebSocket] 收到原始消息:', data)
     if (data.type === 'comment' || data.type === 'like' || data.type === 'follow') {
         const notif = {
-            id: data.data.id || Date.now(),
+            id: data.data.id,
             type: data.type,
-            content: data.data.message || `${data.data.author} ${data.type === 'comment' ? '评论了你的帖子' : data.type === 'like' ? '点赞了你的帖子' : '关注了你'}`,
-            targetId: data.data.postId || null,
-            createdAt: new Date().toISOString(),
-            read: false,
+            content: data.data.content,
+            sender_id: data.data.sender_id,
+            post_id: data.data.post_id,
+            timestamp: data.data.timestamp,
         }
         notificationStore.addNotification(notif)
-        // 可选：显示一个短暂的消息提示
         ElMessage.info({ message: notif.content, duration: 3000 })
     }
 }
@@ -301,26 +300,33 @@ watch(() => userStore.isLoggedIn, (isLoggedIn) => {
 
 onMounted(async () => {
     // 初始化通知未读数
-    notificationStore.fetchUnreadCount()
+    await notificationStore.fetchNotifications()
+
     // 如果已登录，建立 WebSocket
     if (userStore.isLoggedIn) {
         initWebSocket()
-        // 未登录也可查看列表
-        await postStore.fetchPosts()
     }
-    // 注册 WebSocket 消息监听
-    const unsub = wsService.onMessage(handleWebSocketMessage)
-    // 页面关闭时清理（可选）
-    onUnmounted(() => {
-        unsub()
-        wsService.disconnect()
-    })
-    // 监听点击外部关闭面板
-    document.addEventListener('click', handleClickOutside)
+
+    // 无论是否登录，都获取帖子列表（原逻辑将 fetchPosts 放在 if 内部，修正）
+    await postStore.fetchPosts()
+
+    // 注册 WebSocket 消息监听（保存取消函数）
+    unsubWebSocket = wsService.onMessage(handleWebSocketMessage)
+
+    // 监听点击外部关闭面板（保存事件处理函数引用）
+    clickOutsideHandler = handleClickOutside
+    document.addEventListener('click', clickOutsideHandler)
 })
 
+// 统一的清理逻辑
 onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside)
+    if (unsubWebSocket) {
+        unsubWebSocket()
+        wsService.disconnect()
+    }
+    if (clickOutsideHandler) {
+        document.removeEventListener('click', clickOutsideHandler)
+    }
 })
 
 </script>

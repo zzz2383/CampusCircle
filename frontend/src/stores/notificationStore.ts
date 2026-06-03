@@ -3,12 +3,13 @@ import { ref } from 'vue'
 import request from '@/services/request'
 
 export interface Notification {
-    id: number
+    id: string
     type: 'comment' | 'like' | 'follow'
     content: string
-    targetId: number | null   // 帖子ID或其他资源ID
-    createdAt: string
-    read: boolean
+    sender_id: number
+    post_id?: number | null
+    timestamp: string
+    read?: boolean   // 后端返回时可能没有，本地维护
 }
 
 export const useNotificationStore = defineStore('notification', () => {
@@ -17,86 +18,64 @@ export const useNotificationStore = defineStore('notification', () => {
     const loading = ref(false)
 
     /**
-     * 从后端获取未读数量（初次加载或定时刷新）
+     * 从后端获取通知列表（最新优先）
+     * @param limit 获取条数，默认20
      */
-    const fetchUnreadCount = async () => {
+    const fetchNotifications = async (limit = 20) => {
+        loading.value = true
         try {
-            const res = await request.get<never, { unread_count: number }>('/notifications/unread-count')
-            unreadCount.value = res.unread_count
+            const res = await request.get<never, { notifications: Notification[]; count: number }>('/notifications', { params: { limit } })
+            notifications.value = res.notifications
+            // 后端返回的 count 是所有未读数量（假设），直接使用
+            unreadCount.value = res.count
         } catch (error) {
-            console.error('fetch unread count failed', error)
+            console.error('fetchNotifications failed', error)
+        } finally {
+            loading.value = false
         }
     }
 
     /**
-     * 添加一条新通知（由 WebSocket 消息触发）
+     * 标记所有通知为已读（调用后端接口）
+     */
+    const markAllAsRead = async () => {
+        try {
+            await request.post('/notifications/read')
+            unreadCount.value = 0
+            // 可选：将本地列表中的 read 标记为 true
+            notifications.value.forEach(n => { n.read = true })
+        } catch (error) {
+            console.error('markAllAsRead failed', error)
+        }
+    }
+
+    /**
+     * 添加一条新通知（由 WebSocket 推送时调用）
+     * 同时推送到本地列表顶部，并增加未读数
      */
     const addNotification = (notif: Notification) => {
-        // 避免重复（可选，根据 id 去重）
+        // 防止重复（根据 id）
         const exists = notifications.value.some(n => n.id === notif.id)
         if (exists) return
         notifications.value.unshift(notif)
-        if (!notif.read) {
-            unreadCount.value++
-        }
+        unreadCount.value++
     }
 
     /**
-     * 将某条通知标记为已读（客户端标记，后端未提供接口则仅本地）
-     */
-    const markAsRead = (notifId: number) => {
-        const notif = notifications.value.find(n => n.id === notifId)
-        if (notif && !notif.read) {
-            notif.read = true
-            unreadCount.value = Math.max(0, unreadCount.value - 1)
-            // TODO: 调用后端标记已读接口（如果有）
-        }
-    }
-
-    /**
-     * 将所有通知标记为已读
-     */
-    const markAllAsRead = () => {
-        notifications.value.forEach(n => { if (!n.read) n.read = true })
-        unreadCount.value = 0
-        // TODO: 调用后端全部已读接口
-    }
-
-    /**
-     * 清空所有通知（仅本地，可选）
+     * 清空本地通知（不常用，可选）
      */
     const clearAll = () => {
         notifications.value = []
         unreadCount.value = 0
     }
 
-    /**
-     * 加载历史通知列表（后端如有接口）
-     */
-    const fetchNotifications = async (offset = 0, limit = 20) => {
-        loading.value = true
-        try {
-            // 假设后端有 GET /api/notifications?offset=&limit=
-            const res = await request.get<never, { items: Notification[]; total: number }>('/notifications', { params: { offset, limit } })
-            notifications.value = res.items
-            // 重新计算未读数（因为可能标记已读）
-            unreadCount.value = res.items.filter(n => !n.read).length
-        } catch (error) {
-            console.error('fetch notifications failed', error)
-        } finally {
-            loading.value = false
-        }
-    }
-
     return {
         notifications,
         unreadCount,
         loading,
-        fetchUnreadCount,
-        addNotification,
-        markAsRead,
-        markAllAsRead,
-        clearAll,
         fetchNotifications,
+        markAllAsRead,
+        addNotification,
+        clearAll,
     }
 })

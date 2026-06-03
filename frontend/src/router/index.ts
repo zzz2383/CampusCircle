@@ -13,11 +13,10 @@ const router = createRouter({
 })
 
 // 全局前置守卫：等待认证初始化完成
-router.beforeEach(async (_to, _from, next) => {
+router.beforeEach(async (_to, _from) => {
     const userStore = useUserStore()
-    // 如果还没有初始化过，等待 initAuth 完成
     await userStore.initAuth()
-    next()
+    // 不返回任何值或返回 true 都表示允许导航
 })
 
 export default router
