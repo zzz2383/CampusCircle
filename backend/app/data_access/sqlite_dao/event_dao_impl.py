@@ -26,3 +26,15 @@ class EventDAOImpl(IEventDAO):
             query = query.where(Event.club_id == club_id)
         result = await self.session.execute(query.offset(offset).limit(limit))
         return result.scalars().all()
+
+    async def delete(self, event_id: int) -> bool:
+        from sqlalchemy import delete as sa_delete
+        result = await self.session.execute(
+            sa_delete(Event).where(Event.id == event_id))
+        return result.rowcount > 0
+
+    async def count_all(self) -> int:
+        from sqlalchemy import func
+        result = await self.session.execute(
+            select(func.count()).select_from(Event))
+        return result.scalar() or 0

@@ -34,3 +34,15 @@ class ClubDAOImpl(IClubDAO):
     async def get_all(self) -> List[Club]:
         result = await self.session.execute(select(Club))
         return result.scalars().all()
+
+    async def delete(self, club_id: int) -> bool:
+        from sqlalchemy import delete as sa_delete
+        result = await self.session.execute(
+            sa_delete(Club).where(Club.id == club_id))
+        return result.rowcount > 0
+
+    async def count_all(self) -> int:
+        from sqlalchemy import func
+        result = await self.session.execute(
+            select(func.count()).select_from(Club))
+        return result.scalar() or 0

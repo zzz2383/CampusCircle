@@ -33,3 +33,15 @@ class LostItemDAOImpl(ILostItemDAO):
         result = await self.session.execute(
             update(LostItem).where(LostItem.id == item_id).values(is_found=True))
         return result.rowcount > 0
+
+    async def delete(self, item_id: int) -> bool:
+        from sqlalchemy import delete as sa_delete
+        result = await self.session.execute(
+            sa_delete(LostItem).where(LostItem.id == item_id))
+        return result.rowcount > 0
+
+    async def count_all(self) -> int:
+        from sqlalchemy import func
+        result = await self.session.execute(
+            select(func.count()).select_from(LostItem))
+        return result.scalar() or 0

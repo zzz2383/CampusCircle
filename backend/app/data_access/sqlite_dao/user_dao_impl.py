@@ -18,7 +18,7 @@
     - tests/unit/data_access/test_user_dao.py
 """
 
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -103,18 +103,32 @@ class UserDAOImpl(IUserDAO):
         )
 
     async def update_profile(self, user_id: int, **kwargs) -> None:
-        """更新用户个人资料
-
-        实现逻辑：
-            1. 过滤掉值为 None 的字段（不更新这些字段）
-            2. 执行 UPDATE users SET ... WHERE id = :user_id
-
-        参数：
-            user_id: 用户 ID
-            **kwargs: 要更新的字段键值对
-        """
+        """更新用户个人资料"""
         update_values = {k: v for k, v in kwargs.items() if v is not None}
         if update_values:
             await self.session.execute(
                 update(User).where(User.id == user_id).values(**update_values)
             )
+
+    async def list_all(self, offset: int = 0, limit: int = 20, keyword: Optional[str] = None) -> List[User]:
+        from sqlalchemy import select
+        query = select(User)
+        if keyword:
+            query = query.where(
+                User.nickname.like(f"%{keyword}%") | User.student_id.like(f"%{keyword}%")
+            )
+        result = await self.session.execute(
+            query.order_by(User.created_at.desc()).offset(offset).limit(limit)
+        )
+        return result.scalars().all()
+
+    async def update_role(self, user_id: int, role: str) -> bool:
+        result = await self.session.execute(
+            update(User).where(User.id == user_id).values(role=role)
+        )
+        return result.rowcount > 0
+
+    async def count_all(self) -> int:
+        from sqlalchemy import select, func
+        result = await self.session.execute(select(func.count()).select_from(User))
+        return result.scalar() or 0

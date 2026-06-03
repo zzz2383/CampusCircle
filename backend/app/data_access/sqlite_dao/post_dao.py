@@ -100,14 +100,12 @@ class IPostDAO(ABC):
 
     @abstractmethod
     async def count_comments(self, post_id: int) -> int:
-        """获取帖子评论数
+        """获取帖子评论数"""
+        ...
 
-        参数：
-            post_id: 帖子 ID
-
-        返回值：
-            该帖子的评论总数（未软删除的）
-        """
+    @abstractmethod
+    async def count_all(self) -> int:
+        """获取帖子总数"""
         ...
 
     @abstractmethod

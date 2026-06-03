@@ -15,6 +15,7 @@ from app.business.interfaces.notification_service import INotificationService
 from app.business.interfaces.club_service import IClubService
 from app.business.interfaces.event_service import IEventService
 from app.business.interfaces.lost_item_service import ILostItemService
+from app.business.interfaces.admin_service import IAdminService
 from app.business.impl.user_service_impl import UserServiceImpl
 from app.business.impl.post_service_impl import PostServiceImpl
 from app.business.impl.like_service_impl import LikeServiceImpl
@@ -24,6 +25,7 @@ from app.business.impl.notification_service_impl import NotificationServiceImpl
 from app.business.impl.club_service_impl import ClubServiceImpl
 from app.business.impl.event_service_impl import EventServiceImpl
 from app.business.impl.lost_item_service_impl import LostItemServiceImpl
+from app.business.impl.admin_service_impl import AdminServiceImpl
 from app.business.impl.auth_utils import decode_access_token
 from app.data_access.sqlite_dao.user_dao_impl import UserDAOImpl
 from app.data_access.sqlite_dao.post_dao_impl import PostDAOImpl
@@ -38,8 +40,10 @@ from app.data_access.redis_repo.like_repo_impl import LikeRepositoryImpl
 from app.data_access.redis_repo.rank_repo_impl import RankRepositoryImpl
 from app.data_access.redis_repo.notification_repo_impl import NotificationRepositoryImpl
 from app.data_access.redis_repo.lost_item_repo_impl import LostItemRepositoryImpl
+from app.data_access.redis_repo.blacklist_repo_impl import BlacklistRepoImpl
 from app.infrastructure.db import get_db
 from app.infrastructure.redis_client import get_redis
+from app.infrastructure.exceptions import ForbiddenError
 from app.models.dto import UserDTO
 
 security = HTTPBearer(auto_error=False)
@@ -93,6 +97,24 @@ async def get_redis_client():
         raise HTTPException(status_code=503, detail="Redis 服务不可用")
 
 
+async def get_current_admin_user(
+    current_user: UserDTO = Depends(get_current_user),
+) -> UserDTO:
+    if current_user.role != "admin":
+        raise ForbiddenError(code="ADMIN_REQUIRED", message="需要管理员权限")
+    return current_user
+
+
+async def check_not_banned(
+    current_user: UserDTO = Depends(get_current_user),
+    redis=Depends(get_redis_client),
+) -> UserDTO:
+    repo = BlacklistRepoImpl(redis)
+    if await repo.is_banned(current_user.id):
+        raise ForbiddenError(code="BANNED_USER", message="账号已被封禁")
+    return current_user
+
+
 async def get_post_service(
     redis=Depends(get_redis_client),
     db: AsyncSession = Depends(get_db),
@@ -143,11 +165,7 @@ async def get_event_service(
     event_dao = EventDAOImpl(db)
     participant_dao = EventParticipantDAOImpl(db)
     registration_repo = EventRegistrationRepoImpl(redis)
-    return EventServiceImpl(
-        event_dao=event_dao, db_session=db,
-        participant_dao=participant_dao,
-        registration_repo=registration_repo,
-    )
+    return EventServiceImpl(event_dao=event_dao, db_session=db, participant_dao=participant_dao, registration_repo=registration_repo)
 
 
 async def get_club_service(
@@ -176,4 +194,20 @@ async def get_comment_service(
     return CommentServiceImpl(
         comment_dao=comment_dao, post_dao=post_dao, db_session=db,
         notification_service=await get_notification_service(redis=redis),
+    )
+
+
+async def get_admin_service(
+    redis=Depends(get_redis_client),
+    db: AsyncSession = Depends(get_db),
+) -> IAdminService:
+    return AdminServiceImpl(
+        user_dao=UserDAOImpl(db),
+        post_dao=PostDAOImpl(db),
+        comment_dao=CommentDAOImpl(db),
+        club_dao=ClubDAOImpl(db),
+        event_dao=EventDAOImpl(db),
+        lost_item_dao=LostItemDAOImpl(db),
+        blacklist_repo=BlacklistRepoImpl(redis),
+        db_session=db,
     )

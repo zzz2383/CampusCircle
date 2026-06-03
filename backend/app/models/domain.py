@@ -36,10 +36,10 @@ class User(Base):
     nickname: Mapped[str] = mapped_column(String(50), nullable=False, comment="昵称")
     password_hash: Mapped[str] = mapped_column(String(128), nullable=False, comment="密码哈希")
     role: Mapped[UserRole] = mapped_column(
-        SAEnum(UserRole, name="user_role"), default=UserRole.STUDENT, nullable=False
+        SAEnum(UserRole, name="user_role", length=20, values_callable=lambda x: [e.value for e in x]), default=UserRole.STUDENT, nullable=False
     )
     gender: Mapped[Optional[Gender]] = mapped_column(
-        SAEnum(Gender, name="gender"), nullable=True
+        SAEnum(Gender, name="gender", length=10, values_callable=lambda x: [e.value for e in x]), nullable=True
     )
     department: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, comment="院系")
     grade: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, comment="年级")

@@ -7,6 +7,7 @@ from app.business.interfaces.notification_service import INotificationService
 from app.business.interfaces.club_service import IClubService
 from app.business.interfaces.event_service import IEventService
 from app.business.interfaces.lost_item_service import ILostItemService
+from app.business.interfaces.admin_service import IAdminService
 
 __all__ = [
     "IUserService",
@@ -18,4 +19,5 @@ __all__ = [
     "IClubService",
     "IEventService",
     "ILostItemService",
+    "IAdminService",
 ]

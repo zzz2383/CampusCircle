@@ -67,6 +67,13 @@ class AuthError(AppException):
         super().__init__(code, message, status_code)
 
 
+class ForbiddenError(AppException):
+    """权限不足"""
+
+    def __init__(self, code: str = "FORBIDDEN", message: str = "权限不足", status_code: int = 403):
+        super().__init__(code, message, status_code)
+
+
 class BusinessError(AppException):
     """通用业务逻辑异常"""
 

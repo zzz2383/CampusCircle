@@ -181,14 +181,16 @@ class PostDAOImpl(IPostDAO):
         return updated.scalar() or 0
 
     async def count_comments(self, post_id: int) -> int:
-        """获取帖子评论数
-
-        SELECT COUNT(*) FROM comments WHERE post_id = :post_id AND is_active = True
-        """
         result = await self.session.execute(
             select(func.count())
             .select_from(Comment)
             .where(Comment.post_id == post_id, Comment.is_active.is_(True))
+        )
+        return result.scalar() or 0
+
+    async def count_all(self) -> int:
+        result = await self.session.execute(
+            select(func.count()).select_from(Post).where(Post.is_active.is_(True))
         )
         return result.scalar() or 0
 
