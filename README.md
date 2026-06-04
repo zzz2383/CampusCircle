@@ -1,4 +1,3 @@
-以下是根据项目实际情况补充完善后的 README.md，去除了 emoji，内容与项目功能一致。
 
 ```markdown
 # 校园圈 (CampusCircle)
