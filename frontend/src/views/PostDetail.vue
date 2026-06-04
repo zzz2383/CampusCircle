@@ -29,14 +29,14 @@
                         <div class="author-name">{{ post.author_nickname }}</div>
                         <div class="post-time">{{ formatTime(post.created_at) }}</div>
                     </div>
+                    <!-- 操作菜单（仅作者或管理员可见） -->
                     <el-dropdown v-if="canManagePost" trigger="click" @command="handlePostAction">
                         <el-icon class="more-icon">
                             <MoreFilled />
                         </el-icon>
                         <template #dropdown>
                             <el-dropdown-menu>
-                                <!-- 编辑功能暂不可用，可注释或提示开发中 -->
-                                <el-dropdown-item command="edit" :disabled="!canEdit">编辑</el-dropdown-item>
+                                <el-dropdown-item command="edit">编辑</el-dropdown-item>
                                 <el-dropdown-item command="delete">删除</el-dropdown-item>
                             </el-dropdown-menu>
                         </template>
@@ -144,6 +144,25 @@
                         </div>
                     </div>
                 </div>
+                <!-- 编辑帖子对话框 -->
+                <el-dialog v-model="editDialogVisible" title="编辑帖子" width="550px" destroy-on-close>
+                    <el-form :model="editForm" label-position="top">
+                        <el-form-item label="标题">
+                            <el-input v-model="editForm.title" placeholder="标题" maxlength="100" show-word-limit />
+                        </el-form-item>
+                        <el-form-item label="内容">
+                            <el-input type="textarea" v-model="editForm.content" rows="6" placeholder="正文"
+                                maxlength="2000" show-word-limit />
+                        </el-form-item>
+                        <el-form-item label="标签（多个用逗号分隔）">
+                            <el-input v-model="editForm.tags" placeholder="例如：课程,求助" />
+                        </el-form-item>
+                    </el-form>
+                    <template #footer>
+                        <el-button @click="editDialogVisible = false">取消</el-button>
+                        <el-button type="primary" @click="submitEdit" :loading="editSubmitting">保存</el-button>
+                    </template>
+                </el-dialog>
             </div>
         </template>
     </div>
@@ -155,13 +174,15 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, Star, ChatDotRound, View, ChatLineSquare } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/userStore'
-import { deletePost, getPostById, likePost, unlikePost } from '@/services/post'
+import { deletePost, getPostById, likePost, unlikePost, updatePost } from '@/services/post'
 import { getComments, createComment } from '@/services/comment'
 import type { PostDTO, CommentDTO } from '@/types'
+import { usePostStore } from '@/stores/postStore'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const postStore = usePostStore()
 
 const postId = computed(() => Number(route.params.id))
 const post = ref<PostDTO | null>(null)
@@ -184,6 +205,63 @@ const commentSubmitting = ref(false)
 const replyTarget = ref<CommentDTO | null>(null)
 const replyContent = ref('')
 const replyLoading = ref(false)
+
+// 编辑相关
+const editDialogVisible = ref(false)
+const editSubmitting = ref(false)
+const editForm = ref({
+    title: '',
+    content: '',
+    tags: ''
+})
+
+// 删除帖子
+const deleteCurrentPost = async () => {
+    await ElMessageBox.confirm('确定删除该帖子吗？删除后不可恢复。', '提示', { type: 'warning' })
+    await deletePost(postId.value as number)
+    ElMessage.success('删除成功')
+    // 刷新首页列表（如果首页列表中有该帖子）
+    await postStore.fetchPosts(true)
+    router.push('/')
+}
+
+// 编辑帖子
+const openEditDialog = () => {
+    if (!post.value) return
+    editForm.value = {
+        title: post.value.title,
+        content: post.value.content,
+        tags: post.value.tags || ''
+    }
+    editDialogVisible.value = true
+}
+
+const submitEdit = async () => {
+    editSubmitting.value = true
+    try {
+        const payload: any = {}
+        if (editForm.value.title !== post.value?.title) payload.title = editForm.value.title
+        if (editForm.value.content !== post.value?.content) payload.content = editForm.value.content
+        if (editForm.value.tags !== (post.value?.tags || '')) payload.tags = editForm.value.tags || null
+
+        if (Object.keys(payload).length === 0) {
+            ElMessage.warning('未作任何修改')
+            return
+        }
+
+        const updated = await updatePost(postId.value as number, payload)
+        // 更新当前显示
+        post.value = updated
+        // 同步到首页列表（通过 store）
+        postStore.updatePostInList(updated)
+        ElMessage.success('编辑成功')
+        editDialogVisible.value = false
+    } catch (error) {
+        ElMessage.error('编辑失败')
+    } finally {
+        editSubmitting.value = false
+    }
+}
 
 // 获取帖子详情
 const fetchPost = async () => {
@@ -233,19 +311,10 @@ const canManagePost = computed(() => {
     return userStore.user?.id === post.value?.user_id || userStore.user?.role === 'admin'
 })
 
+// 操作菜单命令处理
 const handlePostAction = (command: string) => {
-    if (command === 'delete') {
-        ElMessageBox.confirm('确定删除该帖子吗？删除后不可恢复。', '提示', { type: 'warning' })
-            .then(async () => {
-                await deletePost(post.value!.id)
-                ElMessage.success('删除成功')
-                router.push('/') // 跳转回首页
-            })
-            .catch(() => { })
-    } else if (command === 'edit') {
-        // 跳转到编辑页面或打开发帖对话框填充现有内容，需后端支持更新接口
-        ElMessage.info('编辑功能开发中')
-    }
+    if (command === 'edit') openEditDialog()
+    else if (command === 'delete') deleteCurrentPost()
 }
 
 const loadMoreComments = () => {

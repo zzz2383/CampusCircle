@@ -57,3 +57,8 @@ export const unlikePost = (postId: number) => {
 export const getMyPosts = (params?: { offset?: number; limit?: number }) => {
     return request.get<never, PostListResponse>('/users/me/posts', { params })
 }
+
+// 编辑帖子
+export const updatePost = (postId: number, data: { title?: string; content?: string; tags?: string }) => {
+    return request.put<never, PostDTO>(`/posts/${postId}`, data)
+}

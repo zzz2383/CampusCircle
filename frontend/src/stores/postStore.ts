@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { PostDTO } from '@/types'
-import { getPosts, createPost, likePost, unlikePost } from '@/services/post'
+import { getPosts, createPost, likePost, unlikePost, updatePost } from '@/services/post'
 
 export const usePostStore = defineStore('post', () => {
     const posts = ref<PostDTO[]>([])
@@ -92,6 +92,23 @@ export const usePostStore = defineStore('post', () => {
         }
     }
 
+    // 更新列表中的帖子（用于编辑后同步）
+    const updatePostInList = (updatedPost: PostDTO) => {
+        const index = posts.value.findIndex(p => p.id === updatedPost.id)
+        if (index !== -1) {
+            posts.value[index] = updatedPost
+        }
+    }
+
+    // 编辑帖子（调用后端接口，并同步列表和详情页状态）
+    const editPost = async (postId: number, data: { title?: string; content?: string; tags?: string }) => {
+        const updated = await updatePost(postId, data)
+        // 更新列表中的对应帖子
+        updatePostInList(updated)
+        return updated
+    }
+
+
     return {
         posts,
         total,
@@ -105,5 +122,7 @@ export const usePostStore = defineStore('post', () => {
         setSearch,
         createNewPost,
         toggleLike,
+        editPost,
+        updatePostInList
     }
 })
