@@ -106,9 +106,12 @@ campus_circle/
 
 ```bash
 # 构建并启动前后端容器
+进入到有docker-compose.yml的目录下  
+
 docker compose up -d
 
 # 访问前端页面（默认端口 3000）
+http://localhost:3000
 # 访问 API 文档 http://localhost:8000/docs
 ```
 
