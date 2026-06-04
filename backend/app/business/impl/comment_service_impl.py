@@ -108,6 +108,7 @@ class CommentServiceImpl(ICommentService):
             post_id=comment.post_id,
             user_id=comment.user_id,
             author_nickname=comment.author.nickname if comment.author else None,
+            author_avatar=comment.author.avatar_url if comment.author else None,
             content=comment.content,
             parent_id=comment.parent_id,
             created_at=comment.created_at,
