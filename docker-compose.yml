@@ -1,10 +1,9 @@
-version: "3.9"
-
 services:
+  # 后端 API
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: backend/Dockerfile
     container_name: campus-circle-api
     ports:
       - "8000:8000"
@@ -14,6 +13,7 @@ services:
       - REDIS_PORT=6379
       - REDIS_DB=0
       - DEBUG=false
+      - SECRET_KEY=your-secret-key-change-here
     volumes:
       - sqlite_data:/app/app/infrastructure/data
     depends_on:
@@ -21,6 +21,7 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  # Redis
   redis:
     image: redis:7-alpine
     container_name: campus-circle-redis
@@ -28,6 +29,18 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    restart: unless-stopped
+
+  # 前端 Nginx
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: campus-circle-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
     restart: unless-stopped
 
 volumes:
