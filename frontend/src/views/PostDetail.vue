@@ -174,7 +174,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, Star, ChatDotRound, View, ChatLineSquare } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/userStore'
-import { deletePost, getPostById, likePost, unlikePost, updatePost } from '@/services/post'
 import { getComments, createComment } from '@/services/comment'
 import type { PostDTO, CommentDTO } from '@/types'
 import { usePostStore } from '@/stores/postStore'
@@ -215,17 +214,15 @@ const editForm = ref({
     tags: ''
 })
 
-// 删除帖子
+// 删除帖子（通过 store）
 const deleteCurrentPost = async () => {
     await ElMessageBox.confirm('确定删除该帖子吗？删除后不可恢复。', '提示', { type: 'warning' })
-    await deletePost(postId.value as number)
+    await postStore.deletePostById(postId.value)
     ElMessage.success('删除成功')
-    // 刷新首页列表（如果首页列表中有该帖子）
-    await postStore.fetchPosts(true)
     router.push('/')
 }
 
-// 编辑帖子
+// 编辑帖子（通过 store）
 const openEditDialog = () => {
     if (!post.value) return
     editForm.value = {
@@ -249,11 +246,9 @@ const submitEdit = async () => {
             return
         }
 
-        const updated = await updatePost(postId.value as number, payload)
-        // 更新当前显示
-        post.value = updated
-        // 同步到首页列表（通过 store）
-        postStore.updatePostInList(updated)
+        const updated = await postStore.editPost(postId.value, payload)
+        // 由于 store 已更新列表中的帖子，且 currentPost 也需手动更新
+        postStore.currentPost = updated
         ElMessage.success('编辑成功')
         editDialogVisible.value = false
     } catch (error) {
@@ -263,12 +258,12 @@ const submitEdit = async () => {
     }
 }
 
-// 获取帖子详情
 const fetchPost = async () => {
     try {
         loading.value = true
-        const data = await getPostById(postId.value)
-        post.value = data
+        await postStore.fetchPostDetail(postId.value)
+        // ✅ 关键：将 store 中的帖子数据同步到本地 ref
+        post.value = postStore.currentPost
         error.value = false
     } catch (err) {
         error.value = true
@@ -327,7 +322,7 @@ const getReplies = (commentId: number) => {
     return comments.value.filter(c => c.parent_id === commentId)
 }
 
-// 点赞/取消点赞
+// 点赞（通过 store 的 updatePostLike，但需要先调用接口）
 const handleLike = async () => {
     if (!userStore.isLoggedIn) {
         ElMessage.warning('请先登录')
@@ -337,14 +332,14 @@ const handleLike = async () => {
     if (!post.value) return
     const wasLiked = post.value.is_liked
     const originalCount = post.value.like_count
-    // 乐观更新
+    // 乐观更新本地显示
     post.value.is_liked = !wasLiked
     post.value.like_count = wasLiked ? originalCount - 1 : originalCount + 1
     try {
         if (wasLiked) {
-            await unlikePost(post.value.id)
+            await postStore.unlikePost(post.value.id)
         } else {
-            await likePost(post.value.id)
+            await postStore.likePost(post.value.id)
         }
     } catch {
         // 回滚

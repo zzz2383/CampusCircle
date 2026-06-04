@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { PostDTO } from '@/types'
-import { getPosts, createPost, likePost, unlikePost, updatePost } from '@/services/post'
+import { getPosts, createPost, likePost as likePostAPI, unlikePost as unlikePostAPI, updatePost, deletePost, getPostById } from '@/services/post'
 
 export const usePostStore = defineStore('post', () => {
     const posts = ref<PostDTO[]>([])
@@ -108,6 +108,32 @@ export const usePostStore = defineStore('post', () => {
         return updated
     }
 
+    // 删除帖子
+    const deletePostById = async (postId: number) => {
+        await deletePost(postId)
+        // 从列表中移除
+        const index = posts.value.findIndex(p => p.id === postId)
+        if (index !== -1) posts.value.splice(index, 1)
+        total.value--
+        // 如果当前详情页的帖子被删除，由组件处理路由跳转，这里不负责
+    }
+
+    const currentPost = ref<PostDTO | null>(null)
+    const fetchPostDetail = async (postId: number) => {
+        const data = await getPostById(postId)
+        currentPost.value = data
+        return data
+    }
+
+    const likePost = async (postId: number) => {
+        const res = await likePostAPI(postId)
+        return res
+    }
+    const unlikePost = async (postId: number) => {
+        const res = await unlikePostAPI(postId)
+        return res
+    }
+
 
     return {
         posts,
@@ -116,6 +142,7 @@ export const usePostStore = defineStore('post', () => {
         hasMore,
         currentTag,
         searchKeyword,
+        currentPost,
         fetchPosts,
         loadMore,
         setTag,
@@ -123,6 +150,10 @@ export const usePostStore = defineStore('post', () => {
         createNewPost,
         toggleLike,
         editPost,
-        updatePostInList
+        updatePostInList,
+        deletePostById,
+        fetchPostDetail,
+        likePost,
+        unlikePost,
     }
 })
