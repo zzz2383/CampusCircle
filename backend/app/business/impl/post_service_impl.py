@@ -137,6 +137,7 @@ class PostServiceImpl(IPostService):
             club_id=post.club_id,
             club_name=club_name,
             author_nickname=post.author.nickname if post.author else None,
+            author_avatar=post.author.avatar_url if post.author else None,
             like_count=like_count,
             comment_count=comment_count,
             view_count=post.view_count,

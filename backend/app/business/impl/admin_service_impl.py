@@ -67,6 +67,7 @@ class AdminServiceImpl(IAdminService):
             items.append(CommentDTO(
                 id=c.id, post_id=c.post_id, user_id=c.user_id,
                 author_nickname=c.author.nickname if c.author else None,
+                author_avatar=c.author.avatar_url if c.author else None,
                 content=c.content, parent_id=c.parent_id, created_at=c.created_at,
             ))
         return {"items": items, "total": len(items), "offset": offset, "limit": limit}

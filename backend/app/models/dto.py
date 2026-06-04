@@ -94,6 +94,7 @@ class PostDTO(BaseModel):
     club_id: Optional[int] = None
     club_name: Optional[str] = None
     author_nickname: Optional[str] = None
+    author_avatar: Optional[str] = None
     like_count: int = 0
     comment_count: int = 0
     view_count: int = 0
@@ -126,6 +127,7 @@ class CommentDTO(BaseModel):
     post_id: int
     user_id: int
     author_nickname: Optional[str] = None
+    author_avatar: Optional[str] = None
     content: str
     parent_id: Optional[int] = None
     created_at: Optional[datetime] = None
