@@ -80,6 +80,7 @@ export interface CommentDTO {
     post_id: number
     user_id: number
     author_nickname: string
+    author_avatar: string | null
     content: string
     parent_id: number | null
     created_at: string

@@ -78,7 +78,9 @@
                 <div v-else>
                     <div v-for="comment in comments" :key="comment.id" class="comment-item">
                         <div class="comment-header">
-                            <el-avatar :size="28">{{ comment.author_nickname.charAt(0) }}</el-avatar>
+                            <el-avatar :size="28" :src="comment.author_avatar || undefined">
+                                {{ comment.author_nickname.charAt(0) }}
+                            </el-avatar>
                             <span class="comment-author">{{ comment.author_nickname }}</span>
                             <span class="comment-time">{{ formatTime(comment.created_at) }}</span>
                         </div>
