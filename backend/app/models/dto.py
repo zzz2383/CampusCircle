@@ -176,6 +176,7 @@ class ClubMemberDTO(BaseModel):
     role: str = "member"
     joined_at: Optional[datetime] = None
     user_nickname: Optional[str] = None
+    user_avatar: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
