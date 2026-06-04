@@ -171,6 +171,7 @@ export interface ClubMember {
     role: 'member' | 'admin' | 'founder'
     joined_at: string
     user_nickname: string
+    user_avatar: string | null
 }
 
 export interface CreateClubPayload {

@@ -98,11 +98,13 @@
                     <div v-if="store.members.length === 0" class="empty-tab">暂无成员</div>
                     <div v-else>
                         <div v-for="member in store.members" :key="member.id" class="member-item">
-                            <el-avatar :size="32">{{ member.user_nickname.charAt(0) }}</el-avatar>
+                            <el-avatar :size="32" :src="member.user_avatar || undefined">
+                                {{ member.user_nickname.charAt(0) }}
+                            </el-avatar>
                             <span class="member-name">{{ member.user_nickname }}</span>
                             <span class="member-role">{{ member.role === 'founder' ? '创始人' : member.role === 'admin' ?
                                 '管理员' : '成员'
-                            }}</span>
+                                }}</span>
                             <span class="member-time">{{ formatDate(member.joined_at) }}</span>
                         </div>
                     </div>
