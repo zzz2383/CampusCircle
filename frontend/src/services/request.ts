@@ -45,6 +45,12 @@ request.interceptors.response.use(
     (response: AxiosResponse) => response.data,
     async (error) => {
         const originalRequest = error.config
+        // 如果是登录接口的 401，直接显示错误，不尝试刷新 token
+        if (error.response?.status === 401 && originalRequest.url === '/auth/login') {
+            const message = error.response?.data?.message || error.response?.data?.detail || '账号或密码错误'
+            ElMessage.error(message)
+            return Promise.reject(error)
+        }
         // 防止无限循环
         if (error.response?.status === 401 && !originalRequest._retry) {
             if (isRefreshing) {
@@ -98,7 +104,8 @@ request.interceptors.response.use(
         }
 
         // 其他错误正常抛出
-        const message = error.response?.data?.detail || error.message || '网络错误'
+        const backendMsg = error.response?.data?.message || error.response?.data?.detail
+        const message = backendMsg || error.message || '网络错误'
         ElMessage.error(message)
         return Promise.reject(error)
     }

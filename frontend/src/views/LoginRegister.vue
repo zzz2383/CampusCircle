@@ -14,7 +14,7 @@
                     <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" label-position="top"
                         size="large">
                         <el-form-item label="学号 / 工号" prop="student_id">
-                            <el-input v-model="loginForm.student_id" placeholder="例如 202411001" clearable />
+                            <el-input v-model="loginForm.student_id" placeholder="例如 20240001" clearable />
                         </el-form-item>
                         <el-form-item label="密码" prop="password">
                             <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password />
@@ -35,7 +35,7 @@
                     <el-form ref="registerFormRef" :model="registerForm" :rules="registerRules" label-position="top"
                         size="large">
                         <el-form-item label="学号 / 工号" prop="student_id">
-                            <el-input v-model="registerForm.student_id" placeholder="例如 202411001" clearable />
+                            <el-input v-model="registerForm.student_id" placeholder="例如 20240001" clearable />
                         </el-form-item>
                         <el-form-item label="校园邮箱" prop="email">
                             <el-input v-model="registerForm.email" placeholder="stu@edu.cn / 学校邮箱" clearable />
