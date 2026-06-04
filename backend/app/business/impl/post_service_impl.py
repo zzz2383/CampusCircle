@@ -13,6 +13,7 @@ from app.infrastructure.logger import get_logger
 from app.models.domain import Post
 from app.models.dto import (
     PostCreateRequest,
+    PostUpdateRequest,
     PostDTO,
     PostListResponse,
 )
@@ -62,6 +63,22 @@ class PostServiceImpl(IPostService):
         if post is None:
             raise PostNotFoundError(post_id)
         return await self._to_dto(post, current_user_id=current_user_id)
+
+    async def update_post(self, post_id: int, user_id: int, request: PostUpdateRequest) -> Optional[PostDTO]:
+        post = await self.post_dao.get_by_id(post_id)
+        if post is None:
+            raise PostNotFoundError(post_id)
+        if post.user_id != user_id:
+            raise BusinessError(code="PERMISSION_DENIED", message="只有作者才能编辑帖子")
+        update_data = request.model_dump(exclude_none=True)
+        if not update_data:
+            return await self._to_dto(post)
+        for key, value in update_data.items():
+            setattr(post, key, value)
+        await self.db_session.commit()
+        logger.info(f"Post updated: id={post_id}")
+        updated = await self.post_dao.get_by_id(post_id)
+        return await self._to_dto(updated)
 
     async def delete_post(self, post_id: int, user_id: int) -> bool:
         post = await self.post_dao.get_by_id(post_id)

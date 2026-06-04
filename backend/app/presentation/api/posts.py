@@ -14,7 +14,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Path, Query, status
 
 from app.business.interfaces import IPostService
-from app.models.dto import PostCreateRequest, PostDTO, PostListResponse
+from app.models.dto import PostCreateRequest, PostUpdateRequest, PostDTO, PostListResponse
 from app.models.dto import UserDTO
 from app.presentation.dependencies import (
     get_post_service,
@@ -83,6 +83,17 @@ async def view_post(
     """增加帖子浏览量"""
     count = await post_service.increment_view_count(post_id=post_id)
     return {"view_count": count}
+
+
+@router.put("/{post_id}", response_model=PostDTO)
+async def update_post(
+    post_id: int,
+    request: PostUpdateRequest,
+    current_user: UserDTO = Depends(get_current_user),
+    post_service: IPostService = Depends(get_post_service),
+):
+    """编辑帖子（仅作者，需要登录）"""
+    return await post_service.update_post(post_id=post_id, user_id=current_user.id, request=request)
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)

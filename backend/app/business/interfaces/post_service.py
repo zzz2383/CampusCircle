@@ -1,7 +1,7 @@
 """帖子业务逻辑接口"""
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from app.models.dto import PostCreateRequest, PostDTO, PostListResponse
+from app.models.dto import PostCreateRequest, PostUpdateRequest, PostDTO, PostListResponse
 
 
 class IPostService(ABC):
@@ -13,6 +13,9 @@ class IPostService(ABC):
 
     @abstractmethod
     async def delete_post(self, post_id: int, user_id: int) -> bool: ...
+
+    @abstractmethod
+    async def update_post(self, post_id: int, user_id: int, request: PostUpdateRequest) -> Optional[PostDTO]: ...
 
     @abstractmethod
     async def list_posts(

@@ -29,6 +29,18 @@
                         <div class="author-name">{{ post.author_nickname }}</div>
                         <div class="post-time">{{ formatTime(post.created_at) }}</div>
                     </div>
+                    <el-dropdown v-if="canManagePost" trigger="click" @command="handlePostAction">
+                        <el-icon class="more-icon">
+                            <MoreFilled />
+                        </el-icon>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                                <!-- 编辑功能暂不可用，可注释或提示开发中 -->
+                                <el-dropdown-item command="edit" :disabled="!canEdit">编辑</el-dropdown-item>
+                                <el-dropdown-item command="delete">删除</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
                 </div>
                 <h1 class="post-title">{{ post.title }}</h1>
                 <div class="post-content" v-html="renderMarkdown(post.content)"></div>
@@ -140,10 +152,10 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, Star, ChatDotRound, View, ChatLineSquare } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/userStore'
-import { getPostById, likePost, unlikePost } from '@/services/post'
+import { deletePost, getPostById, likePost, unlikePost } from '@/services/post'
 import { getComments, createComment } from '@/services/comment'
 import type { PostDTO, CommentDTO } from '@/types'
 
@@ -212,6 +224,27 @@ const fetchComments = async (reset = true) => {
     } finally {
         commentsLoading.value = false
         commentsLoadingMore.value = false
+    }
+}
+
+// 是否可管理（作者或管理员）
+const canManagePost = computed(() => {
+    if (!userStore.isLoggedIn) return false
+    return userStore.user?.id === post.value?.user_id || userStore.user?.role === 'admin'
+})
+
+const handlePostAction = (command: string) => {
+    if (command === 'delete') {
+        ElMessageBox.confirm('确定删除该帖子吗？删除后不可恢复。', '提示', { type: 'warning' })
+            .then(async () => {
+                await deletePost(post.value!.id)
+                ElMessage.success('删除成功')
+                router.push('/') // 跳转回首页
+            })
+            .catch(() => { })
+    } else if (command === 'edit') {
+        // 跳转到编辑页面或打开发帖对话框填充现有内容，需后端支持更新接口
+        ElMessage.info('编辑功能开发中')
     }
 }
 
