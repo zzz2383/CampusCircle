@@ -53,7 +53,9 @@
                 <div v-else-if="store.participants.length === 0" class="empty-small">暂无成员报名</div>
                 <div v-else>
                     <div v-for="p in store.participants" :key="p.id" class="participant-item">
-                        <el-avatar :size="28">{{ p.user_nickname.charAt(0) }}</el-avatar>
+                        <el-avatar :size="28" :src="p.user_avatar || undefined">
+                            {{ p.user_nickname.charAt(0) }}
+                        </el-avatar>
                         <span>{{ p.user_nickname }}</span>
                         <span class="participant-time">{{ formatDate(p.created_at) }}</span>
                     </div>

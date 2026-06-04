@@ -233,6 +233,7 @@ export interface EventParticipant {
     user_id: number
     event_id: number
     user_nickname: string
+    user_avatar: string | null
     created_at: string
 }
 
