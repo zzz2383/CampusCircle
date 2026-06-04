@@ -47,6 +47,7 @@ export interface PostDTO {
     content: string
     tags: string | null
     author_nickname: string
+    author_avatar: string | null
     like_count: number
     comment_count: number
     view_count: number

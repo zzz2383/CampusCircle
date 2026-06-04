@@ -22,7 +22,9 @@
             <!-- 帖子卡片 -->
             <div class="post-card">
                 <div class="author-area">
-                    <el-avatar :size="44">{{ post.author_nickname.charAt(0) }}</el-avatar>
+                    <el-avatar :size="36" :src="post.author_avatar || undefined">
+                        {{ post.author_nickname?.charAt(0) || '?' }}
+                    </el-avatar>
                     <div class="author-info">
                         <div class="author-name">{{ post.author_nickname }}</div>
                         <div class="post-time">{{ formatTime(post.created_at) }}</div>
@@ -115,7 +117,9 @@
 
                 <!-- 发表评论表单 -->
                 <div class="comment-form">
-                    <el-avatar :size="36">{{ userStore.user?.nickname?.charAt(0) || 'U' }}</el-avatar>
+                    <el-avatar :size="36" :src="post.author_avatar || undefined">
+                        {{ post.author_nickname?.charAt(0) || '?' }}
+                    </el-avatar>
                     <div class="comment-input-wrapper">
                         <el-input v-model="newCommentContent" type="textarea" :rows="2" placeholder="写下你的评论..."
                             resize="none" />

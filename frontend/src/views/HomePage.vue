@@ -60,7 +60,9 @@
             <div v-for="post in postStore.posts" :key="post.id" class="post-card" @click="goToPost(post.id)">
                 <div class="card-header">
                     <div class="author">
-                        <el-avatar :size="36">{{ post.author_nickname.charAt(0) }}</el-avatar>
+                        <el-avatar :size="36" :src="post.author_avatar || undefined">
+                            {{ post.author_nickname?.charAt(0) || '?' }}
+                        </el-avatar>
                         <div>
                             <div class="author-name">{{ post.author_nickname }}</div>
                             <div class="post-time">{{ formatTime(post.created_at) }}</div>
