@@ -118,5 +118,3 @@ docker compose up -d
 
 MIT
 ```
-
-这份 README 已完整反映项目的实际功能、技术选型、部署方式，去除了所有 emoji，适合用于 GitHub 求职展示。
