@@ -227,6 +227,7 @@ class EventParticipantDTO(BaseModel):
     user_id: int
     event_id: int
     user_nickname: Optional[str] = None
+    user_avatar: Optional[str] = None
     created_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}

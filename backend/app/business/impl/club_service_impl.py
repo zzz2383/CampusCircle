@@ -87,6 +87,7 @@ class ClubServiceImpl(IClubService):
                 role=m.role,
                 joined_at=m.joined_at,
                 user_nickname=user.nickname if user else None,
+                user_avatar=user.avatar_url if user else None,
             ))
         return result
 

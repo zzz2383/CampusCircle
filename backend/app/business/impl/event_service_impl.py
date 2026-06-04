@@ -139,7 +139,8 @@ class EventServiceImpl(IEventService):
             user = await self.user_dao.get_by_id(p.user_id)
             result.append(EventParticipantDTO(
                 id=p.id, user_id=p.user_id, event_id=p.event_id,
-                user_nickname=user.nickname if user else None, created_at=p.created_at,
+                user_nickname=user.nickname if user else None,
+                user_avatar=user.avatar_url if user else None, created_at=p.created_at,
             ))
         return result
 
