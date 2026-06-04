@@ -260,7 +260,8 @@ const genderText = (gender: Gender) => {
 
 // 时间格式化
 const formatTime = (iso: string) => {
-    const date = new Date(iso)
+    // 确保将 UTC 字符串正确解析为 UTC 时间（后端返回的是 UTC 无 Z 后缀）
+    const date = new Date(iso.endsWith('Z') ? iso : iso + 'Z')
     const diff = Date.now() - date.getTime()
     if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`
