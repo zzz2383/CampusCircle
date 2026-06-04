@@ -45,23 +45,17 @@
                         </el-form-item>
                         <div class="form-row">
                             <el-form-item label="院系" prop="department">
-                                <el-select v-model="registerForm.department" placeholder="选择院系" clearable
-                                    style="width: 100%">
-                                    <el-option label="计算机学院" value="计算机学院" />
-                                    <el-option label="软件学院" value="软件学院" />
-                                    <el-option label="信息工程学院" value="信息工程学院" />
-                                    <el-option label="经济管理学院" value="经济管理学院" />
-                                    <el-option label="人文学院" value="人文学院" />
-                                    <el-option label="其他" value="其他" />
+                                <el-select v-model="registerForm.department" placeholder="选择或输入院系" filterable
+                                    allow-create default-first-option clearable style="width: 100%">
+                                    <el-option v-for="dept in departmentOptions" :key="dept" :label="dept"
+                                        :value="dept" />
                                 </el-select>
                             </el-form-item>
                             <el-form-item label="年级" prop="grade">
-                                <el-select v-model="registerForm.grade" placeholder="年级" clearable style="width: 100%">
-                                    <el-option label="2026级" value="2026级" />
-                                    <el-option label="2025级" value="2025级" />
-                                    <el-option label="2024级" value="2024级" />
-                                    <el-option label="2023级" value="2023级" />
-                                    <el-option label="研究生/教师" value="研究生/教师" />
+                                <el-select v-model="registerForm.grade" placeholder="选择或输入年级" filterable allow-create
+                                    default-first-option clearable style="width: 100%">
+                                    <el-option v-for="grade in gradeOptions" :key="grade" :label="grade"
+                                        :value="grade" />
                                 </el-select>
                             </el-form-item>
                             <el-form-item label="性别" prop="gender">
@@ -133,6 +127,19 @@ const registerForm = reactive<RegisterPayload & { confirmPassword: string }>({
     password: '',
     confirmPassword: '',
 })
+
+// 预设院系列表
+const departmentOptions = [
+    '计算机学院', '软件学院', '信息工程学院', '经济管理学院', '人文学院',
+    '外国语学院', '法学院', '马克思主义学院', '理学院', '材料科学与工程学院',
+    '机械工程学院', '自动化学院', '生命科学与技术学院', '环境与化学工程学院',
+    '建筑与城市规划学院', '设计艺术学院', '体育学院', '继续教育学院', '其他'
+]
+
+// 预设年级列表
+const gradeOptions = [
+    '2026级', '2025级', '2024级', '2023级', '2022级', '2021级', '2020级', '其他'
+]
 
 // 校验函数保持不变 ...
 const validateConfirm = (_rule: any, value: string, callback: (error?: Error) => void) => {
