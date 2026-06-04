@@ -113,8 +113,3 @@ docker compose up -d
 ```
 
 注意：首次启动前需确保 `frontend/.env.production` 中后端地址正确，或修改 `docker-compose.yml` 中的环境变量。
-
-## 开源协议
-
-MIT
-```
