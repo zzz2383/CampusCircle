@@ -17,14 +17,29 @@
                     </el-badge>
                 </div>
                 <div class="user-info">
-                    <div class="user-profile-trigger" @click="goToProfile">
-                        <el-avatar :size="40" :src="userStore.user?.avatar_url || undefined">
-                            {{ userStore.user?.nickname?.charAt(0) }}
-                        </el-avatar>
-                        <span class="nickname">{{ userStore.user?.nickname || '游客' }}</span>
+                    <el-dropdown v-if="userStore.isLoggedIn" trigger="click" @command="handleUserMenuCommand">
+                        <div class="user-profile-trigger">
+                            <el-avatar :size="40" :src="userStore.user?.avatar_url || undefined">
+                                {{ userStore.user?.nickname?.charAt(0) }}
+                            </el-avatar>
+                            <span class="nickname">{{ userStore.user?.nickname }}</span>
+                            <el-icon>
+                                <ArrowDown />
+                            </el-icon>
+                        </div>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                                <el-dropdown-item command="profile">个人资料</el-dropdown-item>
+                                <el-dropdown-item v-if="userStore.user?.role === 'admin'" command="admin">
+                                    管理后台
+                                </el-dropdown-item>
+                                <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
+                    <div v-else>
+                        <el-button @click="router.push('/auth')" text>登录</el-button>
                     </div>
-                    <el-button v-if="!userStore.isLoggedIn" @click="router.push('/auth')" text>登录</el-button>
-                    <el-button v-else @click="handleLogout" text>退出</el-button>
                 </div>
             </div>
             <!-- 通知面板（条件显示） -->
@@ -281,13 +296,13 @@ const goToPost = (postId: number) => {
     router.push(`/posts/${postId}`)
 }
 
-//跳转个人资料页
-const goToProfile = () => {
-    if (userStore.isLoggedIn) {
+const handleUserMenuCommand = (command: string) => {
+    if (command === 'profile') {
         router.push('/profile')
-    } else {
-        // 未登录时也可以跳转登录页（可选）
-        router.push('/auth')
+    } else if (command === 'admin') {
+        router.push('/admin')
+    } else if (command === 'logout') {
+        handleLogout()
     }
 }
 
