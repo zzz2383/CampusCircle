@@ -28,7 +28,7 @@
                             </el-button>
                         </el-form-item>
                     </el-form>
-                    <div class="demo-hint">测试学号：20240001 / 密码：123456</div>
+                    <div class="demo-hint">测试管理员学号：123456 / 密码：123456</div>
                 </el-tab-pane>
 
                 <el-tab-pane label="注册" name="register">
