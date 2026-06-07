@@ -62,16 +62,6 @@ cd backend
 .venv/Scripts/pytest -v
 ```
 
-![登录页面](/docs/images/1.png)
-![帖子列表](/docs/images/2.png)
-![帖子详情](/docs/images/3.png)
-![社团中心](/docs/images/4.png)
-![活动列表](/docs/images/5.png)
-![失物招领](/docs/images/6.png)
-![排行榜](/docs/images/7.png)
-![管理后台](/docs/images/8.png)
-
-
 
 ## 项目结构
 
@@ -126,4 +116,11 @@ http://localhost:3000
 # 访问 API 文档 http://localhost:8000/docs
 ```
 
-注意：首次启动前需确保 `frontend/.env.production` 中后端地址正确，或修改 `docker-compose.yml` 中的环境变量。
+![登录页面](/docs/images/1.png)
+![帖子列表](/docs/images/2.png)
+![帖子详情](/docs/images/3.png)
+![社团中心](/docs/images/4.png)
+![活动列表](/docs/images/5.png)
+![失物招领](/docs/images/6.png)
+![排行榜](/docs/images/7.png)
+![管理后台](/docs/images/8.png)
