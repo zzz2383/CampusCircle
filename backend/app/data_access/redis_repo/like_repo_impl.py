@@ -88,7 +88,7 @@ class LikeRepositoryImpl(ILikeRepository):
             True 如果已点赞，False 否则
         """
         key = self.LIKE_SET_KEY.format(post_id)
-        result = await self.redis.sismember(key, user_id)
+        result = await self.redis.sismember(key, str(user_id))
         return bool(result)
 
     async def get_like_count(self, post_id: int) -> int:

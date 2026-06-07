@@ -1,4 +1,24 @@
 services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: campus-circle-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: campus_circle
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # 后端 API
   api:
     build:
@@ -8,15 +28,15 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=sqlite+aiosqlite:///./app/infrastructure/data/campus_circle.db
+      - DATABASE_URL=mysql+aiomysql://root:root123@mysql:3306/campus_circle?charset=utf8mb4
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DB=0
       - DEBUG=false
       - SECRET_KEY=your-secret-key-change-here
-    volumes:
-      - sqlite_data:/app/app/infrastructure/data
     depends_on:
+      mysql:
+        condition: service_healthy
       redis:
         condition: service_started
     restart: unless-stopped
@@ -44,5 +64,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  sqlite_data:
+  mysql_data:
   redis_data:

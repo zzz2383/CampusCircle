@@ -35,7 +35,12 @@ class Settings(BaseSettings):
     )
 
     # 数据库配置
-    DATABASE_URL: str = "sqlite+aiosqlite:///./app/infrastructure/data/campus_circle.db"
+    DATABASE_URL: str = "mysql+aiomysql://root:root@localhost:3306/campus_circle?charset=utf8mb4"
+
+    # MySQL 连接池配置
+    MYSQL_POOL_SIZE: int = 10
+    MYSQL_MAX_OVERFLOW: int = 20
+    MYSQL_POOL_RECYCLE: int = 3600
 
     # Redis 配置
     REDIS_HOST: str = "localhost"
@@ -58,8 +63,8 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE: int = 5 * 1024 * 1024
     ALLOWED_EXTENSIONS: str = "jpg,jpeg,png,gif,webp"
 
-    # 管理员引导
-    ADMIN_STUDENT_IDS: str = ""
+    # 管理员引导（注册时自动设为管理员的学号列表，逗号分隔）
+    ADMIN_STUDENT_IDS: str = "123456"
 
     # CORS
     CORS_ORIGINS: str = '["http://localhost:5173","http://localhost:3000"]'

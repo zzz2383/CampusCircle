@@ -1,0 +1,246 @@
+[33mcommit a3401258f7f5e9ee13818bf5c326fda12d7c99f7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 20:53:05 2026 +0800
+
+    fix:修改认证部分和管理员号
+
+[33mcommit c566ddf63065c9773f91ce2041fea541a87a67a4[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 20:48:21 2026 +0800
+
+    fix:修改README
+
+[33mcommit 32408e243479836a94b481a326a2d3d5681edf2e[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 20:46:25 2026 +0800
+
+    feat:添加docker部署
+
+[33mcommit e1137cde1d00b7a6b568848a17dd00d93504ae72[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 17:11:04 2026 +0800
+
+    fix:再在在修改README
+
+[33mcommit ce2ea5c7d1b2e09d3956f0b2148061cfcff00f37[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 17:10:28 2026 +0800
+
+    fix:再在修改README
+
+[33mcommit 6cdc23f66d5af7a9b7386e88a97ed0adffca2a45[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 17:09:21 2026 +0800
+
+    fix:再修改README
+
+[33mcommit 7ff96d9574176a43f00a90449faaff6e721f26f8[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 17:08:39 2026 +0800
+
+    fix:修改README
+
+[33mcommit 19b24489dc7ee38bb3a836d14df41a6e7315e67a[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 13:18:38 2026 +0800
+
+    fix:前端优化前端帖子的调用路径
+
+[33mcommit ddacc1244bef4f6ed0d4f324e0b13d52a48866d5[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 13:02:43 2026 +0800
+
+    fix:前端帖子作者编辑功能
+
+[33mcommit 9cc26e5ae9c1d7f521f787bb61be13a4f2ce82b1[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 12:51:28 2026 +0800
+
+    feat: 帖子编辑功能
+    
+    - PostService 新增 update_post 方法（仅作者）
+    - PUT /api/posts/{id} 编辑帖子（标题/内容/标签）
+    - PostUpdateRequest DTO 已存在但未使用，现在接入
+    - 日志记录编辑操作
+
+[33mcommit a40c8390182c0ce253b5d171ee4029693776b687[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 12:44:12 2026 +0800
+
+    fix:修复前端个人资料页面的帖子时间显示错误问题
+
+[33mcommit d447d6dfb368907be5f455a949bb3b7d1629bf26[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 12:41:12 2026 +0800
+
+    fix:修复前端认证页面的提示问题
+
+[33mcommit 4d5fdf335041373f80048550f0bf47e7023044b1[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 12:31:09 2026 +0800
+
+    fix:首页添加管理员入口
+
+[33mcommit e6bceb6af81d12134a29c570b89c26ea69aaec80[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 12:00:15 2026 +0800
+
+    fix:修复前端活动详细没有用户头像
+
+[33mcommit c1c8c498d0c4285b509c31290aa6b2fb488f03f8[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 11:58:11 2026 +0800
+
+    fix:修复前端社团成员没有头像
+
+[33mcommit a352caabd31b5feeec8b3374fd80827d24f400ff[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 11:54:40 2026 +0800
+
+    fix: ClubMemberDTO 的 user_avatar 字段缺失
+    
+    之前的替换未成功写入 ClubMemberDTO。重新添加 user_avatar 字段，并 E2E验证返回正确。
+
+[33mcommit 7d658d566b7513a260104e886abd678bb1308380[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 11:50:21 2026 +0800
+
+    feat: 社团成员和活动参与者添加头像字段
+    
+    - ClubMemberDTO 新增 user_avatar
+    - EventParticipantDTO 新增 user_avatar
+    - ClubServiceImpl.get_members 填充 user_avatar
+    - EventServiceImpl.get_participants 填充 user_avatar
+
+[33mcommit 486432524ea48aed7dfff5c389009b3cdc9d40d1[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 11:47:51 2026 +0800
+
+    fix: 评论头像字段未填充
+    
+    comment_service_impl._to_dto 漏掉了 author_avatar，补上 comment.author.avatar_url
+
+[33mcommit 01b229bdfe886a5ada9b1a004b22a83ab0a3bf99[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 11:45:50 2026 +0800
+
+    fix:修复前端评论没有头像
+
+[33mcommit c10e95ecd4e97980df4debfbd1b3ad35a4ef5122[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 11:40:32 2026 +0800
+
+    fix:修复前端帖子没有头像的问题
+
+[33mcommit 9acb0d9b5c59a8ab2c17ee078b427a4d10c02a39[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 11:33:01 2026 +0800
+
+    feat: 帖子/评论返回作者头像字段
+    
+    - PostDTO 新增 author_avatar 字段
+    - CommentDTO 新增 author_avatar 字段
+    - PostServiceImpl._to_dto 从 post.author.avatar_url 填充
+    - CommentServiceImpl 从 comment.author.avatar_url 填充
+    - AdminServiceImpl.list_all_comments 同步添加
+
+[33mcommit 12bbc90c41129c8ac2038dfb797546d74f3f4a21[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 11:25:48 2026 +0800
+
+    fix:修复前端认证页面重复问题
+
+[33mcommit 104b0212b58e4b9e2cb27b980551e881476083f1[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Thu Jun 4 11:23:46 2026 +0800
+
+    fix:优化前端院系和年级选择
+
+[33mcommit 4c276025f67dd35b8973e38d9b7c7ed4b3cd0590[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Wed Jun 3 23:04:44 2026 +0800
+
+    fix:优化前端性别选择
+
+[33mcommit aa1151a8cb6a99aacf932a271a4a947e6cf31c5c[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Wed Jun 3 22:58:33 2026 +0800
+
+    fix:优化前端管理员帖子图
+
+[33mcommit a0f3a6c56a119db65f12804a8136a9b9e340e7c5[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Wed Jun 3 22:49:29 2026 +0800
+
+    fix: stats/posts-trend 返回 500
+    
+    SQLAlchemy 的 cast(created_at, Date) 在 SQLite 下返回 datetime.date 对象，Python 处理时报 'fromisoformat: argument must be str'。改用原生 SQL DATE() 函数解决。
+
+[33mcommit 5616ac683101ec232c3085cea114a70851463514[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Wed Jun 3 22:44:31 2026 +0800
+
+    fix: stats 路由路径错误
+    
+    /stats 被两个函数使用了两次，/stats/posts-trend 路径缺失。
+    修复后：
+    - GET /api/admin/stats/posts-trend?days=7 发帖趋势
+    - GET /api/admin/stats/clubs 社团帖子统计
+    - GET /api/admin/stats 平台概览
+
+[33mcommit 13f5cba6a1c34e4dde55ab8a1b512278b874bfba[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Wed Jun 3 22:43:49 2026 +0800
+
+    fix:修复前端管理员图表
+
+[33mcommit 4e5d881d84c251ccec199f2925b7371838125722[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Wed Jun 3 22:35:02 2026 +0800
+
+    feat: 帖子真实总数 + 发帖趋势 + 社团帖子数统计
+    
+    - PostDAO: count_latest 按标签/社团条件返回真实总数
+    - PostDAO: get_post_trend 近N天每日发帖数
+    - ClubDAO: get_post_counts 各社团帖子数
+    - PostService.list_posts: total 改为真实数据库总数（不再返回当前页大小）
+    - AdminService: get_post_trend / get_club_activity 方法
+    - GET /api/admin/stats/posts-trend?days=7 发帖趋势
+    - GET /api/admin/stats/clubs 社团帖子统计
+
+[33mcommit 498f887e401e009e0e86dfd8c4e642a98e5a6744[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Wed Jun 3 22:16:44 2026 +0800
+
+    fix: 管理员权限安全加固
+    
+    - TDD 实现：先写 7 个测试，再实现代码，最终 127 测试全绿
+    - set_role 不允许设为 admin（只允许 student/teacher）
+    - set_role 不允许修改自己的角色（403 Forbidden）
+    - UserRole 导入修复
+    - 新增 ADMIN_STUDENT_IDS 环境变量配置引导管理员
+    - 注册时学号匹配自动设为 admin
+
+[33mcommit 01cdb4b08b32f8bc0090fd6a03202568f63b0d25[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Wed Jun 3 22:08:04 2026 +0800
+
+    feat:添加前端管理员平台
+
+[33mcommit 8694a6b3102e83f6081670e57502c2be85c6b497[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Wed Jun 3 21:54:24 2026 +0800
+
+    fix:修复后端管理员api
+
+[33mcommit d79450225fc53bff1bb9149e4c3ba57029fd43cc[m
+Author: zzz2383 <15875942383@163.com>
+Date:   Wed Jun 3 21:36:06 2026 +0800
+
+    feat: 管理员查看全部评论
+    
+    - CommentDAO 新增 list_all（全部评论分页查询）
+    - AdminService 新增 list_all_comments
+    - GET /api/admin/comments 管理员评论列表端点（分页）
+
+[33mcommit ca5ee33b1f0163b70cd031c224e0e7
